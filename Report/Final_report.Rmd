@@ -9,6 +9,7 @@ fontsize: 12pt
 output: pdf_document
 ---
 
+<<<<<<< HEAD
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo=FALSE, message = FALSE, 
   warning = FALSE, results = "hide", fig.height = 3, fig.width = 6) 
@@ -20,11 +21,17 @@ library('ggplot2')
 ```
 
 
+=======
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+>>>>>>> 9143de8980f533fb20bc7a2df56a8488b6d85244
 ## INTRODUCTION
 
 ## THEORETICAL RESULTS
 
 ### Types of outlier in ARIMA model 
+<<<<<<< HEAD
 We say that $x_t$ folows an ARIMA (p,d,q) model if $x_t$  has the form
 \begin{align} \phi(B)(1-B)^dX_t = \theta(B)Z_t
 \end{align}
@@ -47,6 +54,12 @@ plot(1:200,wn,type='l',main="",xlab="Interval",ylab="")
 lines(18:21,wn[18:21],col='red')
 lines(169:171,wn[169:171],col='red')
 ```
+=======
+We say that $x_t$ folows an ARIMA (p,d,q) model if $x_t$ can be written 
+
+#### Additive outliers (AO)
+An additive outlier (AO) correspond to an exogenous change of a single observation of the time series. It is associated with inciden like measurement errors or impulse effect due to external effect. 
+>>>>>>> 9143de8980f533fb20bc7a2df56a8488b6d85244
 
 #### Innovative Outliers 
 
