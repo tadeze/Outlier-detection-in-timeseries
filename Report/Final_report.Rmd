@@ -1,0 +1,66 @@
+---
+title: "OUTLIER DETECTION IN TIMESERIES"
+author: |
+  | Amir Azarbakht
+  | Michael Dumelle
+  | Camden Lopez
+  | Tadesse Zemicheal
+fontsize: 12pt
+output: pdf_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message = FALSE, 
+  warning = FALSE, results = "hide", fig.height = 3, fig.width = 6) 
+
+#Includes  
+library('tsoutliers')
+library('ggplot2')
+
+```
+
+
+## INTRODUCTION
+
+## THEORETICAL RESULTS
+
+### Types of outlier in ARIMA model 
+We say that $x_t$ folows an ARIMA (p,d,q) model if $x_t$  has the form
+\begin{align} \phi(B)(1-B)^dX_t = \theta(B)Z_t
+\end{align}
+Where B is backshift operator, $Z_t$ is white noise process, $\phi(B) = 1-\alpha_1B-\alpha_2B^2 ...-\alpha_pB^p$  $\theta(B) = 1+\beta_1B + \beta_2B^2 +... + \beta_pB^p$, and d is the number of differenced times. It is further assumed the root of $\phi(B)$ and $\theta(B)$ are assumed to be outside unit circle and have no common roots. 
+
+#### Additive outliers (AO)
+An additive outlier (AO) correspond to an exogenous change of a single observation of the time series. It is associated with inciden like measurement errors or impulse effect due to external effect.  A time series $y_1 ....y_T$ affected by AO at t=k is given by
+
+\begin{equation} y_t = x_t + \omega I_t^k\end{equation}
+
+```{r}
+#simulation time series data 
+set.seed(9)
+# Arma model ARMA(1,1)
+wn <- arima.sim(model=list(ar=c(0.5,0.3),ma=c(0.5,0.0),sd=1),200)
+#add additive autlier with weight of 10 times to current value at two section 20 and 170
+wn[20]<- 5*wn[20]
+wn[170] <- 6*wn[170]
+plot(1:200,wn,type='l',main="",xlab="Interval",ylab="") 
+lines(18:21,wn[18:21],col='red')
+lines(169:171,wn[169:171],col='red')
+```
+
+#### Innovative Outliers 
+
+#### Temporal Change outliers 
+
+#### Level Shifts Outliers
+
+## OUTLIER DETECTION AND ESTIMATION PROCEDURE
+
+
+## EXPERIMENTS 
+
+## CONCULSION
+
+## REFERENCE
+
+## APPENDIX
