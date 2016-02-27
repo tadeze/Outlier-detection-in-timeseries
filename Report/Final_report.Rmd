@@ -1,0 +1,40 @@
+---
+title: "OUTLIER DETECTION IN TIMESERIES"
+author: |
+  | Amir Azarbakht
+  | Michael Dumelle
+  | Camden Lopez
+  | Tadesse Zemicheal
+fontsize: 12pt
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## INTRODUCTION
+
+## THEORETICAL RESULTS
+
+### Types of outlier in ARIMA model 
+We say that $x_t$ folows an ARIMA (p,d,q) model if $x_t$ can be written 
+
+#### Additive outliers (AO)
+An additive outlier (AO) correspond to an exogenous change of a single observation of the time series. It is associated with inciden like measurement errors or impulse effect due to external effect. 
+
+#### Innovative Outliers 
+
+#### Temporal Change outliers 
+
+#### Level Shifts Outliers
+
+## OUTLIER DETECTION AND ESTIMATION PROCEDURE
+
+
+## EXPERIMENTS 
+
+## CONCULSION
+
+## REFERENCE
+
+## APPENDIX
