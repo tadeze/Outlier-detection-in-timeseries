@@ -1,0 +1,45 @@
+---
+title: "ST 565 Time Series - Project"
+author: |
+  | Amir Azarbakht
+  | Michael Dumelle
+  | Camden Lopez
+  | Tadesse Zemicheal
+fontsize: 12pt
+output: pdf_document
+---
+
+# Outlier Detection in Time Series
+
+We are interested in learning about the detection of outliers in
+time series data. Suppose we have a time series that we want to model
+as a (seasonal) ARIMA process, but the process that the series
+represents may have been affected by some unusual events, or there
+may be errors in the measurement or recording of the time series data.
+How can we identify unusual observations in order to investigate them
+and/or adjust the time series so that our model is not thrown off by
+the anomalies?
+
+We plan to turn in a written report covering the following topics:
+
+ - Models for several types of outliers: innovational outlier (IO),
+additive outlier (AO), temporary change (TC), and level shift (LS)
+ - How these types of outliers affect an ARIMA model (to make things
+ simpler, we won't consider models with seasonal components)
+ - An iterative algorithm described by Chen and Liu (1993) that
+ simulataneously detects outliers and estimates both outlier effects
+ and model parameters
+ - The implementation of this algorithm in the `tsoutliers` R package
+ - An example application of the algorithm to the `ipi` dataset
+ in `tsoutliers`, which contains economic indices from several
+ European countries from 1999/2000 to 2013 (one major outlier being the
+ 2008 economic crisis), or another dataset if we find one that's more
+ illustrative of the different outlier types
+ 
+ We plan to use following references:
+ 
+ - Wei, William W.S., "Time Series Analysis", Chapter 9: Intervention
+ Analysis and Outlier Detection (1990)
+ - Chen, Chung and Lon-Mu Liu, "Joint Estimation of Model Parameters
+ and Outlier Effects in Time Series", J. Amer. Stat. Assoc. (1993)
+ - R documentation of `tsoutliers`
