@@ -1,21 +1,18 @@
 ---
-title: "OUTLIER DETECTION IN TIMESERIES"
+title: "Outlier Detection in Time Series"
 author: |
-  | Amir Azarbakht
-  | Michael Dumelle
-  | Camden Lopez
-  | Tadesse Zemicheal
+        | Amir Azarbakht
+        | Michael Dumelle
+        | Camden Lopez
+        | Tadesse Zemicheal
 fontsize: 12pt
 output: pdf_document
 ---
 ```{r, include=FALSE}
-knitr::opts_chunk$set(echo=FALSE, message = FALSE, 
-  warning = FALSE, results = "hide", fig.height = 3, fig.width = 6) 
-
-#Includes  
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      results = "hide", fig.height = 3, fig.width = 6)
 library('tsoutliers')
 library('ggplot2')
-
 ```
 
 ## INTRODUCTION
@@ -33,9 +30,14 @@ where B is the standard backshift operator, $Z_t$ is white noise process (identi
 \begin{align} X_t^* = X_t +  \omega \frac{A(B)}{G(B)H(B)}I_1(t_1)
 \end{align}
 where $I_t(t_1)$ = 1 if t = $t_1$, and 0 otherwise.  $I_t(t_1)$ acts as an indicator function for the outlier impact occurence, with $t_1$ being the location (possibly unknown) of the outlier. $\omega \frac{A(B)}{G(B)H(B)}$ denotes magnitude and pattern of some event.  We will assume these are not previously known.  Outliers are then classified by imposing a structure on    
-$\frac{A(B)}{G(B)H(B)}$ and estimating a value of $\omega$.  In this report, we will focus on four main types of outliers: Additive (AO), Innovational (IO), Level Shift (LS), and Temporary Change (TC). \\
+$\frac{A(B)}{G(B)H(B)}$ and estimating a value of $\omega$.  In this report, we will focus on four main types of outliers: Additive (AO), Innovational (IO), Level Shift (LS), and Temporary Change (TC). 
 
 ## Additive outliers (AO)
+
+An additive outlier (AO) correspond to an exogenous change of a single
+observation of the time series. It is associated with inciden like measurement
+errors or impulse effect due to external effect. A time series $y_1 ....y_T$
+affected by AO at t=k is given by
 
 \noindent An additive outlier (AO) corresponds to an exogenous change of a single observation of the time series. It is associated with incident like measurement errors or impulse effect due to external forces.  For an example of an additive outlier, consider a time series recording highway traffic.  If rainfall is abnormally larger than expected, traffic would likely be much higher than normal.  More formally, an additive outlier at time t is defined as 
 \begin{align} X_t^* = X_t + \omega I_t(t_1) 
@@ -53,7 +55,6 @@ plot(1:200,wn,type='l',main="",xlab="Interval",ylab="")
 lines(18:21,wn[18:21],col='red')
 lines(169:171,wn[169:171],col='red')
 ```
-
 \noindent which is obtained by setting $\frac{A(B)}{G(B)H(B)} = 1$.  The effect of  these outliers on the response at time t is \textbf{independent} of the ARIMA model initially chosen, and does not depend on any function of B.  We see that an additive outlier simply acts as a shift in the value of the response when $t = t_1$.  The rest of the model remains unchanged when $t \neq t_1$, as $I_t(t_1) = 0$.
 
 
@@ -125,7 +126,7 @@ print(fit)
 ```
 Applying the two stage outleir detection process using `tsoutliers` function generates. 
 
-```{r,eval=TRUE}
+```{r,eval=TRUE,echo=T}
 nile.outliers <- tso(Nile,types=c("AO","LS","TC"))
 nile.outliers
 plot(nile.outliers)
@@ -133,13 +134,10 @@ plot(nile.outliers)
 
 Additionaly the `tso` suggests an ARIMA order (0,0,0)
 
-```{r}
-print(nile.outliers)
-```
+Example 2. Outlier from yahoo dataset 
+
 
 ## CONCULSION
-
-## REFERENCE
 
 ## APPENDIX
 

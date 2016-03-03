@@ -31,6 +31,14 @@ library(fma)
 
 outlier.chicken <- tsoutliers::tso(chicken,types=c("AO","LS","TC"),maxit.iloop=10)
 
+# unit impulse
+m1 <- ts(outliers.effects(outlier.chicken$outliers, n = length(chicken), weights = FALSE))
+tsp(m1) <- tsp(chicken)
+# weighted by the estimated coefficients
+m2 <- ts(outliers.effects(outlier.chicken$outliers, n = length(chicken), weights = TRUE))
+tsp(m2) <- tsp(chicken)
+
+
 # Measurement of the annual flow of the river Nile at Ashwan 1871-1970
 data(Nile)
 plot(Nile)
