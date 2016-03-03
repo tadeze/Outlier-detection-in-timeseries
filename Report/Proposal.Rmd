@@ -5,8 +5,8 @@ author: |
   | Michael Dumelle
   | Camden Lopez
   | Tadesse Zemicheal
+output: html_document
 fontsize: 12pt
-output: pdf_document
 ---
 
 # Outlier Detection in Time Series
@@ -43,3 +43,4 @@ additive outlier (AO), temporary change (TC), and level shift (LS)
  - Chen, Chung and Lon-Mu Liu, "Joint Estimation of Model Parameters
  and Outlier Effects in Time Series", J. Amer. Stat. Assoc. (1993)
  - R documentation of `tsoutliers`
+
