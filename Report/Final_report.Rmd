@@ -30,6 +30,9 @@ these outliers? These are all questions we intend to answer throughout this
 report, and understanding them is crucial to correctly handling time series
 data.
 
+[*Goal is to model "normal" or "baseline" behavior without model fit being
+influenced by anomalies (or measurement errors)*]
+
 Throughout this report, we will look at four different types of outliers:
 additive outliers (AO), innovational outliers (IO), temporary change outliers
 (TC), and level shift outliers (LS). We intend to examine the effects that
@@ -114,7 +117,7 @@ $I_t(t_1) = 0$.
 An innovational outlier is regarded as an initial impact with effects
 lingering over future observations. For example, consider a time series
 recording seismic wave activity in a specific area. Now, assume an earthquake
-occurs. Seismic wave activity will increase dramatically, and be the effects
+occurs. Seismic wave activity will increase dramatically, and the effects
 of this earthquake will be present long time thereafter. More formally, we
 define as innovational outlier as follows.
 
@@ -279,7 +282,17 @@ outlier or is due to natural, random variation. Once we have deemed an
 observation an outlier, it is possible to adjust a time series model to
 account for this information and improve future predictions.
 
-# Experiments 
+# Examples 
+
+[*Possible questions to address, in addition to showing one or two examples:*]
+
+ * What functions does the `tsoutliers` package offer? What exactly do they do?
+ In particular, how exactly is `auto.arima` used within `tso`?
+ * What arguments need to be specified? What are the defaults? When should one
+ provide arguments other than the defaults?
+ * How does one decide which types of outliers to look for?
+ * How does one choose $C$ and $\delta$?
+ * What is the output of the R function(s) and how does one interpret it?
 
 ### Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
 
