@@ -1,5 +1,5 @@
 ---
-title: "Outlier Detection in Time Series"
+title: "Outliers in Time Series"
 subtitle: "ST 565 Final Project (Winter 2016)"
 author: |
         | Amir Azarbakht, Michael Dumelle,
@@ -323,6 +323,25 @@ Additionaly the `tso` suggests an ARIMA order (0,0,0).
 Example 2. Outlier from yahoo dataset
 
 # Conclusion
+
+# References
+
+Chang, I., Tiao, G. C., and Chen, C. (1988), "Estimation of Time Series
+Parameters in the Presence of Outliers," *Technometrics*, 30, 193--204.
+
+Chen, C. and Liu, Lon-Mu (1993), "Joint Estimation of Model Parameters and
+Outlier Effects in Time Series," *Journal of the American Statistical
+Association*, 88, 284--297.
+
+Chen, C., and Tiao, G. C. (1990), "Random Level Shift Time Series Models,
+ARIMA Approximation, and Level Shift Detection," *Journal of Business and
+Economic Statistics*, 8, 170--186.
+
+Fox, A. J. (1972), "Outliers in Time Series," *Journal of the Royal Statistical
+Society*, Ser. B, 34, 350--363.
+
+Tsay, Ruey S. (1986), "Time Series Model Specification in the Presence of
+Outliers," *Journal of the American Statistical Association*, 81, 132--141.
 
 # Appendix
 
