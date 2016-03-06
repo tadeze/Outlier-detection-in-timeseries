@@ -9,7 +9,7 @@ output: pdf_document
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+knitr::opts_chunk$set(message = FALSE, warning = FALSE,
            results = "hide", fig.height = 3, fig.width = 6)
 library('tsoutliers')
 library('ggplot2')
@@ -127,7 +127,7 @@ normal. More formally, an additive outlier at time t is defined as
 X_t^* = X_t + \omega I_t(t_1)
 \end{align}
 
-```{r}
+```{r,echo=FALSE}
 #simulation time series data 
 set.seed(9)
 # Arma model ARMA(1,1)
@@ -390,12 +390,11 @@ accuracy of the parameter estimates, and a suggested value is 0.001.
  * How does one choose $C$ and $\delta$?
  * What is the output of the R function(s) and how does one interpret it?
 
-### Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
+### Example 1:  Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
 
 Fitting auto.arima model gives an ARIMA(1,1,1).
 
-```{r,fig.align='left',echo='T',eval=TRUE}
-library(tsoutliers)
+```{r,fig.align='left',echo=TRUE,eval=TRUE}
 library(fma)
 
 data(Nile)
@@ -408,15 +407,47 @@ print(fit)
 Applying the two stage outlier detection process using `tsoutliers` function
 generates
 
-```{r,eval=TRUE,echo=T}
+```{r,eval=TRUE,echo=TRUE}
 nile.outliers <- tso(Nile,types=c("AO","LS","TC"))
-nile.outliers
 plot(nile.outliers)
 ```
+The outlier detected are 
+```{r, echo=TRUE,results='markup'}
+# Outlier values 
+print(nile.outliers$outliers)
+```
+The main detected outliers are `level shift (LS)` in 1899 and `Additive outlier (AO)` in 1913.  Additinaly, the fitted ARIMA model is ARIMA( 0,0,0).
 
-Additionally the `tso` suggests an ARIMA order (0,0,0).
+```{r, echo=TRUE,results='markup'}
+# Outlier values 
+print(nile.outliers$fit)
+```
 
-Example 2. Outlier from yahoo dataset
+
+### Example 2. Outliers in price of chicken in USA from 1924 to 1993. The data shows the price was gradually decreasing, but there might be an outliers hidden in the trends. 
+```{r,echo=TRUE}
+library(fma)
+plot(chicken,main="Chicken price in USA from 1924 to 1993")
+
+```
+Applying `'tsoutliers::tso` for 30 iteration, identifies the following outliers. 
+
+```{r,echo=TRUE}
+#check outliers for 30 maximum iteration
+chicken.outlier <- tsoutliers::tso(chicken,types=c("AO","LS","TC","IO"),maxit.iloop=30)
+```
+The fitted ARIMA model  
+```{r, echo=TRUE,results='markup'}
+print(chicken.outlier$fit)
+```
+Detectd outliers
+```{r, echo=TRUE,results='markup'}
+# Outlier values 
+plot(chicken.outlier)
+#Summary of the detected outliers
+print(chicken.outlier$outliers)
+```
+As we can see the main two outliers are `level shift outlier` in 1935. and `temporal change` outlier in 1943. 
 
 # Conclusion
 
@@ -438,6 +469,9 @@ Society*, Ser. B, 34, 350--363.
 
 Tsay, Ruey S. (1986), "Time Series Model Specification in the Presence of
 Outliers," *Journal of the American Statistical Association*, 81, 132--141.
+
+Galeano,Pena (2013) "Finding Outliers in Linear and Nonlinear Time Series" Chapter
+Robustness and Complex Data Structures pp 243-260
 
 # Appendix
 
