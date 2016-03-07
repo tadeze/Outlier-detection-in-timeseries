@@ -17,279 +17,347 @@ library('ggplot2')
 
 # Introduction
 
-Throughout the quarter, we have used various methods to model time series data.
-However, we have not encountered any data that has been affected by the presence
-of one or more outliers. In various statistical settings, outliers can have a
-profound impact on the way data is analyzed. If outliers are not properly
-adjusted for, inference on parameters and prediction of future observations
-will be less reliable. In some extreme cases, it may be meaningless. Consider
-a time series subject to the presence of outliers. How do we quantify an
-outlier in the time series setting? Are the outliers seemingly random, or is
-there some pattern among them? How do we properly account for the effect of
-these outliers? These are all questions we intend to answer throughout this
-report, and understanding them is crucial to correctly handling time series
-data.
+Data sets often contain observations that are far from other observations.
+These outliers may be due to measurement error, or they may truly represent
+anomalous or extreme behavior in the observed phenomenon. Outliers can have
+a large influence in many statistical analyses, and since we prefer the results
+of an analysis not to depend on a few unusual observations, it is necessary
+to develop methods for avoiding or removing outlier effects.
 
-[*Goal is to model "normal" or "baseline" behavior without model fit being
-influenced by anomalies (or measurement errors)*]
+With time series data, because of the time-dependent correlation structure
+among the observations, outliers present unique problems and have to be dealt
+with differently from outliers in i.i.d. observations. Suppose we want to model
+a process as ARMA($p, q$). The data may contain measurement errors or may
+have been affected by some unusual event(s). We would like a way to detect
+outliers, which we might investigate more closely to determine their origin,
+and adjust the series so that we can fit a model on what we believe the series
+would have been without the measurement errors or unusual events.
 
-Throughout this report, we will look at four different types of outliers:
-innovational outliers (IO), additive outliers (AO), temporary change outliers
-(TC), and level shift outliers (LS). We intend to examine the effects that
-these outliers have on standard ARIMA models. For simplicity, we will only
-consider outliers in non-seasonal models. This problem becomes increasingly
-complex when a seasonality component is added. We intend to use an iterative
-algorithm described by Chen and Liu (1993) to detect these four outlier types.
-This algorithm is implemented in the R package `tsoutliers`.
-We will apply this algorithm to the `ipi` data set in `tsoutliers` and use
-graphical tools to aid our analysis. This data set contains economic indices
-from several European countries from 1999 to 2013. After successful detection,
-we will also begin exploring ways to incorporate this information into our
-model building process to obtain reliable parameter estimates and predictions.
+We will consider four simple models for time series outliers and how they can
+be detected by estimating their hypothetical effect at each time point using
+linear regression. Large estimated effect at a given time point suggests an
+outlier at that point. The estimate of outlier effect also allows us to remove
+the effect and proceed to model the adjusted series. We will look at a
+procedure developed by Chen and Liu (1993) to detect and estimate outlier
+effects while also fitting an ARMA($p, q$) model. The R package `tsoutliers`
+conveniently implements this procedure, and we will see examples of applying it
+to real time series.
 
 # Outlier Models
 
-We say that $X_t$ follows an ARIMA (p,d,q) model if it has the form
+The following models describe four different ways outliers can enter into an
+ARMA($p, q$) process $X_t$. For simplicity, we consider only non-seasonal,
+non-integrated processes, though the models can be extended for seasonal
+ARIMA processes. $X_t$ is described by
 
-\begin{align}
-X_t = \frac{\theta(B)}{\phi(B)(1-B)^d}Z_t 
-\end{align}
+\begin{equation}
+X_t = \frac{\theta(B)}{\phi(B)} Z_t 
+\end{equation}
 
-where B is the standard backshift operator, $Z_t$ is white noise process
-(identically and independently distributed as $N(0,\sigma^2)$), $\phi(B) =
-1-\alpha_1B-\alpha_2B^2 ...-\alpha_pB^p$, $\theta(B) = 1- \beta_1B -
-\beta_2B^2 -... - \beta_pB^q$, d is the order of differencing, and t = 1,...,n,
-where n is the number of observations in the time series. It is further assumed
-the roots of $\phi(B)$ and $\theta(B)$ are outside unit circle (this gives us
-stationarity and invertibility) and have no common factors. Now, to describe
-a time series which is influenced by a nonrepetitive event, we will consider
-the following model
+where $Z_t \sim_{iid}$ Normal$(0, \sigma^2)$. Now let $X^*_t$ denote the
+observed series, which is contaminated by outliers. The outlier effect
+on the series is $X^*_t - X_t$.
 
-\begin{align}
-X_t^* = X_t + \omega \frac{A(B)}{G(B)H(B)}I_1(t_1)
-\end{align}
-
-where $I_t(t_1)$ = 1 if t = $t_1$, and 0 otherwise. $I_t(t_1)$ acts as an
-indicator function for the outlier impact occurence, with $t_1$ being the
-location (possibly unknown) of the outlier. $\omega \frac{A(B)}{G(B)H(B)}$
-denotes magnitude and pattern of some event. We will assume these are not
-previously known. Outliers are then classified by imposing a structure on 
-$\frac{A(B)}{G(B)H(B)}$ and estimating a value of $\omega$. In this report,
-we will focus on four main types of outliers: Additive (AO), Innovational (IO),
-Level Shift (LS), and Temporary Change (TC).
-
-## Innovational Outlier (IO)
-
-An innovational outlier is regarded as an initial impact with effects
-lingering over future observations. For example, consider a time series
-recording seismic wave activity in a specific area. Now, assume an earthquake
-occurs. Seismic wave activity will increase dramatically, and the effects
-of this earthquake will be present long time thereafter. More formally, we
-define as innovational outlier as follows.
-
-An innovational outlier at time t, is of the form 
-\begin{align}
-X_t^* = (X_t + \omega I_t(t_1))\frac{\phi(B)}{\alpha(B)\omega(B)}
-\end{align}
-
-One can see that IO's are obtained by letting $\frac{A(B)}{G(B)H(B)} =
-\frac{\phi(B)}{\alpha(B)\omega(B)}$
-
-It is important to note that these outliers are \textbf{not independent} of
-the model, as they rely on $\theta(B)$, $\alpha(B)$, and $\phi(B)$ terms.
-Thus, future values of the time series are affected by the IO. When an IO
-outlier occurs at time $t = t_1$, the effect of this outlier on $Y_{t_1 + k} =
-\omega \psi_k$, where $k \geq 0$ and $\psi_k$ is the $kth$ coefficient of the
-polynomial $\psi_k$ is defined as 
-
-\begin{align}
-\psi(B) = \frac{\theta(B)}{\alpha(B)\phi(B)} = \psi_0 + \psi_1 B +
-\psi_2 B^2 + .... + \psi_{max(p,d,q)}B^{max(p,q,d)}, \text{where} \ \psi_0 = 1
-\end{align}
-
-Because the time series is stationary and invertible, we have that the $\psi$'s
-tend to 0. This implies that the IO we will deal with produce a temporary
-effect (consider the sales example above) In other words, the IO at time $t_1$
-does not effect the value in the time series at time $t_1 + k$, for large
-enough $k$. In other cases, it is also possible that the IO produces an initial
-effect and a subsequent permanent level shift.
+Consider two broad types of outlier effects. Either the effect is independent
+of the underlying $X_t$ process, or the effect gets incorporated into the
+process and is propagated through the "memory" described by $\phi(B)$ and
+$\theta(B)$. Among the first type, the effect can be a simple impulse at one
+time point---this is referred to as an additive outlier (AO)---or the effect
+can decay over time---a temporary change (TC)---or remain permanently---a
+level shift (LS). The second type, where the effect gets propagated by the
+memory of the process, is basically equivalent to an impulse applied to the
+"innovation" $Z_t$. More complicated models are possible, but these four in
+combination can cover a large variety of cases.
 
 ## Additive Outlier (AO)
 
-An additive outlier (AO) corresponds to an exogenous change of a single
-observation of the time series. It is associated with incident like measurement
-errors or impulse effect due to external forces. For an example of an additive
-outlier, consider a time series recording highway traffic. If rainfall is
-abnormally larger than expected, traffic would likely be much higher than
-normal. More formally, an additive outlier at time t is defined as 
+An additive outlier corresponds to an impulse on the series at one point,
+where the impulse is external to the $X_t$ process. Large measurement errors
+would clearly be additive outliers; the "impulse" would not represent anything
+actually added to the $X_t$ process in that case.
 
-\begin{align}
-X_t^* = X_t + \omega I_t(t_1)
-\end{align}
+The observed series given an AO at time $t = t_1$ is
 
-```{r}
-#simulation time series data 
-set.seed(9)
-# Arma model ARMA(1,1)
-wn <- arima.sim(model=list(ar=c(0.5,0.3),ma=c(0.5,0.0),sd=1),200)
-#add additive autlier with weight of 10 times to current value at two section 20 and 170
-wn[20]<- 5*wn[20]
-wn[170] <- 6*wn[170]
-plot(1:200,wn,type='l',main="",xlab="Interval",ylab="") 
-lines(18:21,wn[18:21],col='red')
-lines(169:171,wn[169:171],col='red')
-```
+\begin{equation}
+X^*_t = X_t + \omega I_t(t_1)
+\end{equation}
 
-which is obtained by setting $\frac{A(B)}{G(B)H(B)} = 1$. The effect of these
-outliers on the response at time t is \textbf{independent} of the ARIMA model
-initially chosen, and does not depend on any function of B. We see that an
-additive outlier simply acts as a shift in the value of the response when
-$t = t_1$. The rest of the model remains unchanged when $t \neq t_1$, as
-$I_t(t_1) = 0$.
+So the outlier effect is simply
+
+\begin{equation}
+X^*_t - X_t = \omega I_t(t_1)
+\end{equation}
+
+or $\omega$ at $t = t_1$ and zero elsewhere. The effect does not depend on
+the ARMA process and has no lingering effects.
 
 ## Level Shift (LS)
 
-A level shift outlier (LS) produces a sudden, permanent change in the time
-series values. Consider a time series of stock market prices for a given
-company. Now, assume there is a new regulation the company must adhere to,
-greatly changing how the company operates. Stock prices would likely jump
-up or down and stay there, depending on the regulation. More formally, a
-level shift outlier is defined as follows
+A level shift is a sudden, persisent change in the mean of the time series,
+or an external impulse that carries on into the future without diminishing.
+An example might be a change in some performance measure for a company when
+a new regulation goes into effect.
 
-\begin{align}
-X_t^* = X_t + \frac{\omega I_t(t_1)}{(1 - B)}
-\end{align}
+The observed series when a LS is present can be intuitively expressed as
 
-which is obtained by setting $\frac{A(B)}{G(B)H(B)} = \frac{1}{(1 - B)}$.
-Moreover, we see that these outliers are \textbf{independent} of the original
-model, as they simply represent a shift in the response.
+\begin{equation}
+X^*_t = X_t + \omega I_t(t \geq t_1)
+\end{equation}
+
+where $I_t(t \geq t_1) = 1$ for $t \geq t_1$, 0 otherwise. But an alternative
+expression which will be more convenient later is
+
+\begin{equation}
+X^*_t = X_t + \frac{1}{1 - B} \omega I_t(t_1)
+\end{equation}
+
+The second form is easier to understand when rearranged to make the outlier
+effect clear:
+
+\begin{equation}
+(1 - B) (X^*_t - X_t) = \omega I_t(t_1)
+\end{equation}
+
+The application of $(1 - B)$ carries the effect over to all successive points
+in the series. Note that again the effect does not depend on the ARMA process.
 
 ## Temporary Change (TC)
 
-A temporary change (TC) outlier produces an abrupt change in the time series
-which decays over time. For example, consider a time series recording daily
+A temporary change is an abrupt change in the time series which decays over
+time. For example, consider a time series recording daily
 profit for a retail store. Now suppose there is some month long sporting sale
 at the store which draws large crowds. The restaurant experiences inflated
 sales due to the influx of people. It is likely that at the beginning of the
 sale, a lot of people will visit the store. As the month progresses the total
 sales per day should decrease, because many people have already gotten the
-good deals. After the month ends, sales will go back to normal. This
-illustrates the effect of the temporary change outlier. We rigorously define
-the temporary change outlier as 
+good deals. After the month ends, sales will go back to normal.
+
+In this case the observed series is
+
+\begin{equation}
+X^*_t = X_t + \frac{1}{(1 - \delta B)} \omega I_t(t_1)
+\end{equation}
+
+where $0 \leq \delta \leq 1$. Again, this formulation is clearer when
+rearranged:
+
+\begin{equation}
+(1 - \delta B) (X^*_t - X_t) = \omega I_t(t_1)
+\end{equation}
+
+The outlier effect gets carried over but with some decay controlled by
+$\delta$. Notice that the temporary change outlier is a generalization of the
+AO and LS types. An AO is equivalent to a TC with $\delta = 0$, and a LS is a
+TC with $\delta = 1$. The value of $\delta$ used to characterize TC outliers
+in a particular setting must be chosen by the researcher. A suggested value
+is $\delta = 0.7$.
+
+## Innovational Outlier (IO)
+
+The innovation (or "white noise") $Z_t$ can be thought of as combining
+the effects of a large number of independent, unmeasured variables (plus,
+possibly, routine measurement error due to limited precision---distinct from
+the gross error that could result in an AO). Suppose that something causes an
+impulse of $\omega$ to be added to the innovation at time $t_1$. (An example
+might be an earthquake creating an impulse in seismic activity.)
+Then $X^*_t$ becomes
+
+\begin{equation}
+X^*_t = \frac{\theta(B)}{\phi(B)}\left[Z_t + \omega I_{t_1}(t)\right]
+\end{equation}
+
+where $I_{t_1}(t) = 1$ for $t = t_1$ and 0 otherwise. Rearranging and
+substituting in $X_t$, we see that the outlier effect is
+
+\begin{equation}
+X^*_t - X_t = \frac{\theta(B)}{\phi(B)} \omega I_{t_1}(t)
+\end{equation}
+
+Thus, the outlier effect depends on the ARMA model through $\theta(B)$ and
+$\phi(B)$. When an IO occurs at $t = t_1$, the effect of this outlier at
+$t = t_1 + k$, $k \geq 0$, is
 
 \begin{align}
-X_t^* = X_t + \frac{\omega I_t(t_1)}{(1 - \delta B)}
+X^*_{t_1 + k} - X_{t_1 + k} &= \frac{\theta(B)}{\phi(B)} \omega I_{t_1}(t_1 + k) \\
+&= \psi(B) \omega I_{t_1}(t_1 + k) \\
+&= \psi_k \omega
 \end{align}
 
-We can see that $\frac{A(B)}{G(B)H(B)} = \frac{1}{(1 - \delta B)}$ and that
-these outliers are \textbf{independent} of the model chosen.
+where $\psi(B) = \theta(B) / \phi(B)$ and $\psi_k$ is the $k^{th}$ coefficient
+of $\psi(B)$, corresponding to the $B^k$ term. Because the time series is
+stationary, the $\psi_k$ coefficients tend to zero as $k$ increases. This
+implies that the IO effect diminishes and becomes zero given enough time. 
 
-```{r, fig.height=6, fig.width=6}
-#Example of temporal shift outliers
-#source http://stats.stackexchange.com/users/48766/javlacalle
-tc <- rep(0, 50)
-tc[20] <- 1
-tc1 <- filter(tc, filter = 0, method = "recursive")
-tc2 <- filter(tc, filter = 0.3, method = "recursive")
-tc3 <- filter(tc, filter = 0.7, method = "recursive")
-tc4 <- filter(tc, filter = 1, method = "recursive")
-par(mfrow = c(2,2))
-plot(tc1, main = "TC delta = 0")
-plot(tc2, main = "TC delta = 0.3")
-plot(tc3, main = "TC delta = 0.7")
-plot(tc4, main = "TC delta = 1", type = "s")
-#dev.off()
+The various outlier effects are summarized by the following figure. The IO
+effect is shown with four different ARMA models to demonstrate that the effect
+depends on the model.
+
+\vspace{0.5cm}
+
+```{r fig.width = 6, fig.height = 5, fig.align = "center"}
+# Calculate effect of IO given AR and MA coefficients, out to given lag
+innov_outlier_effect <- function (ar, ma, lag) {
+  ar <- ifelse(rep(is.null(ar), lag), rep(0, lag),
+               c(ar, rep(0, lag - length(ar))))
+  ma <- ifelse(rep(is.null(ma), lag), rep(0, lag),
+               c(ma, rep(0, lag - length(ma))))
+  effect <- numeric(lag)
+  effect[1] <- 1
+  for (k in 1:(lag - 1)) {
+    effect[1 + k] <- ma[k]
+    for (j in 1:k) {
+      effect[1 + k] <- effect[1 + k] + ar[j] * effect[1 + k - j]
+    }
+  }
+  effect
+}
+
+# Calculate and plot effects of each outlier type
+
+par(mfrow = c(2, 2))
+n <- 16
+t <- 1:n
+t1 <- 6 # Outlier here
+
+# IO
+ar <- c(-0.4, -0.2, 0.048)
+ma <- c(-0.4, -0.2, 0.048)
+io1 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+plot(io1, type = 'l', ylim = c(-1, 1), lty = 1,
+     xlab = "Time", ylab = "Effect", main = "IO")
+ar <- 0.5
+ma <- c(0.4, 0.2, 0.048)
+io2 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io2, lty = 2)
+ma <- -0.7
+io3 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io3, lty = 3)
+ma <- NULL
+io4 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io4, lty = 4)
+
+# AO
+ao <- rep(0, n)
+ao[t1] <- 1
+plot(ao, type = 'l', ylim = c(-0.1, 1),
+     xlab = "Time", ylab = "Effect", main = "AO")
+
+# LS
+ls <- rep(0, n)
+ls[t1:n] <- 1
+plot(ls, type = 'l', ylim = c(-0.1, 1),
+     xlab = "Time", ylab = "Effect", main = "LS")
+
+# TC
+tc <- rep(0, n)
+tc[t1] <- 1
+delta <- 0.7
+for (k in (t1 + 1):n) {
+  tc[k] <- delta * tc[k - 1]
+}
+plot(tc, type = 'l', ylim = c(-0.1, 1),
+     xlab = "Time", ylab = "Effect", main = "TC")
+
 ```
-
-Notice that the temporary change outlier is a generalization of the additive
-and level shift outliers ($\delta = 0$ and $\delta = 1$, respectively). In the
-special level shift case, the time series actually does not decrease over time,
-as it is a permanent change. $\delta$ is used to model the pace of the decaying
-effect, and is often specified according to the specific needs of the
-researcher.
 
 # Outlier Detection and Estimation
 
 In this section we consider the problem of detecting the presence of an
 unknown number of outliers occuring at unknown times in a time series. The
 outliers may be any of the four types described above. First, we describe
-how the effects of a single outlier can be estimated using multiple regression.
+how the effects of a single outlier can be estimated using linear regression
 Then we point out some practical issues, and the section culminates in a
 description of the procedure proposed by Chen and Liu (1993) to jointly
 estimate model parameters and outlier effects in a series.
 
 ## Estimating the Effect of a Single Outlier
 
-When examining the effect of outliers, we must first assume the time series
-parameters are known.  Next, define the polynomial
+Suppose we have an observed time series $X^*_t$ that arose from an ARMA($p, q$)
+process $X_t$ with one outlier at time $t_1$. For now, assume we know the ARMA
+model parameters, $t_1$, and the type of outlier. We will find an estimate
+of the outlier magnitude $\omega$. (Later we discuss how this calculation is
+useful when the locations and types of outliers are unknown.)
+
+\begin{equation}
+\pi(B) = \frac{\phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
+\end{equation}
+
+Since $X_t = \frac{\theta(B)}{\phi(B)} Z_t$, applying $\pi(B)$ to $X_t$ would
+result in the purely random residuals, $Z_t$. But $X^*_t$ is contaminated
+by the outlier, so the residuals that result from applying $\pi(B)$ to
+$X^*_t$ are also contaminated. Let $\hat{e}_t = \pi(B) X^*_t$ be those
+contaminated residuals. For the different outlier types, we have
 
 \begin{align}
-\pi(B) = {\phi(B) \alpha (B) / \theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
+\text{IO: } \hat{e}_t &= \omega I_t(t_1) + Z_t \\
+\text{AO: } \hat{e}_t &= \omega \pi(B) I_t(t_1) + Z_t \\
+\text{LS: } \hat{e}_t &= \omega \frac{\pi(B)}{1 - B} I_t(t_1) + Z_t \\
+\text{TC: } \hat{e}_t &= \omega \frac{\pi(B)}{1 - \delta B} I_t(t_1) + Z_t
 \end{align}
 
-where the $\pi_j$ weights for large $j$ become essentially 0, as the roots of
-$\theta(B)$ all have absolute value greater than 1 (implying the infinite
-series converges).  We can estimate residuals, $\hat{e_t}$, with the expression
+These equations can be put in the form of a linear regression where the
+responses are the residuals $\hat{e}_t$ and the predictors are different
+for each type of outlier. The outlier magnitude $\omega$ is the coefficient
+to be estimated:
+
+\begin{equation}
+\hat{e}_t = \omega x_t + Z_t
+\end{equation}
+
+For all outlier types, $x_t = 0$ for $t < t_1$ and $x_t = 1$ for $t = t_1$.
+For $t = t_1 + k$, $k \geq 1$, the value of $x_t$ depends on the outlier type:
 
 \begin{align}
-\hat{e_t} = \pi(B)Y_t^* \text{, for} \ t = 1,2,...
+\text{IO: } x_{t_1 + k} &= 0 \\
+\text{AO: } x_{t_1 + k} &= -\pi_k \\
+\text{LS: } x_{t_1 + k} &= 1 - \sum_{j = 1}^{k} \pi_j \\
+\text{TC: } x_{t_1 + k} &= \delta^k -
+  \sum_{j = 1}^{k - 1} \delta^{k - j} \pi_j - \pi_k
 \end{align}
 
-It is important to note that these residuals are subject to outlier effects.
-We can express the residual for the four types of outliers by the formulas
-below.
+The least-squares estimate for $\omega$ can then be calculated for each
+type of outlier, using the appropriate $x_t$ values:
 
-\begin{align}
-\hat{e_t} &= \omega \pi(B) I_t(t_1) + a_t  & \text{Additive Outlier}\\
-\hat{e_t} &= \omega I_t(t_1) + a_t & \text{Innovational Outlier}\\
-\hat{e_t} &= \frac{\omega \pi(B) I_t(t_1)}{1 - B} + a_t & \text{Level Shift}\\
-\hat{e_t} &= \frac{\omega \pi(B) I_t(t_1)}{1 - \delta B} + a_t & \text{Temporary Change}
-\end{align}
+\begin{equation}
+\hat{\omega} = \frac{\sum_{t = t_1}^{n} \hat{e}_t x_{t}}{\sum_{t = t_1}^{n} x^2_{t}}
+\end{equation}
 
-We can express the above equations alternatively as $\hat{e_t} =
-\omega x_{it} + a_t \text{, for} \ t = t_1, t_1 + 1, t_1 + 2, ... , n$ and
-$i = 1,2,3,4,$ where
+Note that when $t_1 = n$ (the last observation in the time series), it is
+impossible to distinguish the different types of outliers, as $x_{t_1} = 1$
+for all types, and this is the only predictor value available.
 
-\begin{align}
-&x_{it} = 0 \ \text{for all} \ i \ \text{and} \ t<t_1 \\
-&x_{it_1} = 1 \ \text{for all} \ i \ \text{and} \ k \geq 1 \\
-&x_{1(t_1 + k)} = 0 \\
-&x_{2(t_1 + k)} = -\pi_k\\
-&x_{3(t_1 + k)} = 1 - \sum_{j = 1}^{k} \pi_j\\
-&x_{4(t_1 + k)} = \delta^{k - j} - \sum_{j = 1}^{k - 1} \delta^{k - j}\pi_j - \pi_k
-\end{align}
+Once we have an estimate of $\omega$ corresponding to a particular type of
+outlier at $t = t_1$, we can use equations (2, 7, 10, 12) to remove the outlier
+effect and obtain and adjusted series which estimates $X_t$, the uncontaminated
+process.
 
-Using the above formulas allows us obtain the least squares estimate for the
-effect of an outlier, $\omega$, at $t = t_1$. These are provided below.
+## Using the Single-Outlier Estimate
 
-\begin{align}
-& \hat{\omega}_{\text{AO}}(t_1) = \frac{\sum_{t = t_1}^{n} \hat{e}_tx_{2t}}{\sum_{t = t_1}^{n}x^2_{2t}}\\
-& \hat{\omega}_{\text{IO}}(t_1) = \hat e_{t_1}\\
-& \hat{\omega}_{\text{LS}}(t_1) = \frac{\sum_{t = t_1}^{n} \hat{e}_tx_{3t}}{\sum_{t = t_1}^{n}x^2_{3t}}\\
-& \hat{\omega}_{\text{TC}}(t_1) = \frac{\sum_{t = t_1}^{n} \hat{e}_tx_{4t}}{\sum_{t = t_1}^{n}x^2_{4t}}\\
-\end{align}
+For the estimation of $\omega$, we assumed the ARMA model parameters and the
+outlier type and location $t_1$ were known. In practice, they are not. The model
+parameters must first be estimated, then $\hat{\omega}$ can be calculated
+for each type of outlier at each $t_1 = 1, \dots, n$. If $\hat{\omega}$ is large
+at some $t_1$, and largest at $t_1$ for one type of outlier, it might be
+justified to say there is an outlier of that type at $t_1$. This raises two
+issues.
 
-It is interesting to note that when $t_1 = n$ (last observation in a time
-series) it is impossible to distinguish what type the outlier is, as $x_{it_1}
-= 1$ for all $i$, and this is the only value in each sum term above.  Next,
-one can standardize these estimated values to obtain asymptotically normal
-test statistics of the outlier effects.
+First, estimates for the model parameters will be influenced by outliers.
+Eventually we want parameter estimates uninfluenced by outliers, but we have
+to start somehow. Cycling through estimation of model parameters, detection
+of outliers, and adjustment of the series to remove outlier effects seems a
+reasonable strategy. This is what procedure described below does.
 
-\begin{align}
-& \hat{\tau}_{\text{AO}}(t_1) = \frac{\hat{\omega}_{\text{AO}}(t_1){\left(\sum_{t = t_1}^{n} x^2_{2t}\right)}^{1/2}}{\hat{\sigma}_a}\\
-& \hat{\tau}_{\text{IO}}(t_1) = \frac{\hat{\omega}_{\text{IO}}(t_1)}{\hat{\sigma}_a}\\
-& \hat{\tau}_{\text{LS}}(t_1) = \frac{\hat{\omega}_{\text{LS}}(t_1){\left(\sum_{t = t_1}^{n} x^2_{3t}\right)}^{1/2}}{\hat{\sigma}_a}\\
-& \hat{\tau}_{\text{TC}}(t_1) = \frac{\hat{\omega}_{\text{TC}}(t_1){\left(\sum_{t = t_1}^{n} x^2_{4t}\right)}^{1/2}}{\hat{\sigma}_a}\\
-\end{align}
+The other issue is that the $\hat{\omega}$ values are calculated using
+different sets of predictors and responses in the regression, so they cannot be
+compared immediately. Dividing $\hat{\omega}$ by its standard error results in
+standardized statistics which are approximately normally distributed:
 
-where $\hat{\sigma}_a$ is an estimate of the standard deviation. We can
-compare these test statistics to a standard normal distribution to find
-appropriate p-values when testing $H_0: \omega = 0$ vs $H_1: \omega \neq 0$.
+\begin{equation}
+\hat{\tau} = \frac{\hat{\omega}}{\sqrt{\sigma_a^2 / \sum_{t = t_1}^{n} x^2_t}}
+\end{equation}
 
-These results help us decide whether an unusual observation is actually an
-outlier or is due to natural, random variation. Once we have deemed an
-observation an outlier, it is possible to adjust a time series model to
-account for this information and improve future predictions.
+where $\sigma_a^2$ is the variance of $Z_t$. The $\hat{\tau}$ statistics allow for
+comparison among various outlier types at various times.
 
 ## Effects of Multiple Outliers
 
@@ -297,7 +365,7 @@ Estimation of outlier effects and calculation of statistics as described
 above becomes complicated when multiple outliers are present. When it is assumed
 (as above) that only one outlier is present, but in fact there are many, the
 presence of the other outliers may bias the estimate of the effect of one
-at the time $t$ under consideration. Or the effects of an outlier at $t$ may
+at the time under consideration. Or the effects of an outlier may
 be masked by the effects of an earlier outlier.
 
 The problem of bias and masking suggests that the effects of all of the outliers
@@ -309,7 +377,7 @@ both the time series and the set of identified outliers.
 
 ## Estimating $\sigma_a$
 
-The statistics described above require an estimate of $\sigma_a$. Since we
+The $\hat{\tau}$ statistic requires an estimate of $\sigma_a$. Since we
 are assuming the presence of outliers which could bias the estimate upwards,
 it is important to use an estimate of $\sigma_a$ that is robust to outliers.
 Three options are the median absolute deviation (MAD), a trimmed standard
@@ -319,13 +387,13 @@ residual at time $t_1$ omitted.
 ## Detection and Estimation Procedure
 
 Chen and Liu (1993) proposed an iterative procedure for detecting outliers,
-estimating their effects, and estimating the parameters of an ARIMA model
+estimating their effects, and estimating the parameters of an ARMA model
 to fit the series after adjusting for outlier effects. The procedure assumes
-that the order of the ARIMA model is known. We will see that implementation
+that the order of the ARMA model is known. We will see that implementation
 of this procedure in `tsoutliers` can also automatically choose the order of
-the ARIMA model.
+the ARMA model.
 
-The procedure has three stages. In Stage I, outliers are accumulated one-by-one
+The procedure has three stages. In Stage I, outliers are accumulated one by one
 in order of descending magnitude of $\hat{\tau}$ statistic. In Stage II, any
 outliers that can no longer be considered outliers after taking into account
 the effects of all the others are dropped. In Stage III, the model estimates
@@ -335,13 +403,11 @@ elimination results in the final set of outliers and estimates of their effects.
 ### Stage I
 
 1. Compute the maximum likelihood estimates of the model parameters.
-2. For $t = 1, \dots, n$ calculate $\hat{\tau}_{IO}(t), \hat{\tau}_{AO}(t),
-\hat{\tau}_{LS}(t),$ and $\hat{\tau}_{TC}(t)$. Let $\hat{\tau}_{max}$ be the
-maximum of the absolute values of the $\hat{\tau}$ statistics.
-If $\hat{\tau}_{max} > C$, where $C$ is a constant chosen beforehand,
-there is potentially an outlier at the time and
-of the type for which $\hat{\tau}_{max}$ occurred. Remove the effect of the
-outlier from the series using equations above.
+2. For $t = 1, \dots, n$ calculate $\hat{\tau}$ for each type of outlier.
+Let $\hat{\tau}_{max}$ be the maximum of the absolute values of the $\hat{\tau}$
+statistics. If $\hat{\tau}_{max} > C$, where $C$ is a constant chosen beforehand,
+there is (potentially) an outlier at the time and of the type for which
+$\hat{\tau}_{max}$ occurred. Remove the effect of the outlier from the series.
 3. Repeat (2) until no more $\hat{\tau}$ statistics indicate potential outliers.
 4. If any outliers have been found in (2--3), go back to (1), computing
 the parameter estimates on the series that has now been adjusted for outlier
@@ -350,9 +416,9 @@ to Stage II.
 
 ### Stage II
 
-5. Jointly estimate the outlier effects using the same multiple regression
-model above. Calculate the $\hat{\tau}$ statistics. If any of the statistics no
-longer exceed the threshold $C$, drop the corresponding outlier.
+5. Jointly estimate the outlier effects using a multiple regression
+based on (24). Calculate the $\hat{\tau}$ statistics. If any of the statistics
+no longer exceed the threshold $C$, drop the corresponding outlier.
 6. Repeat (5) until no more outliers are dropped.
 7. Obtain jointly estimated outlier effects using only the remaining outliers
 and adjust the original series by removing their effects.
@@ -368,10 +434,10 @@ Otherwise, proceed to Stage III.
 Using only these model parameters, iterate through (2--3) and (5--6) to obtain
 a final set of outliers and estimates of their effects.
 
-## Comments
+### Comments
 
 The procedure uses two threshold values, $C$ and $\epsilon$, which are chosen
-by the user. Based on simulations, Chen and Liu (1993) recommend $C = 2.5$
+by the user. Based on simulations, Chen and Liu recommend $C = 2.5$
 to 2.9 for a shorter series of length less than $n = 100$ or so, and $C = 3.0$
 for $n = 100$ to 200. For longer series, $n > 200$, $C$ greater than 3.0 may
 be appropriate, but in any case multiple values should be tried to assess
