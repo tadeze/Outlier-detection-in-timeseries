@@ -456,7 +456,7 @@ accuracy of the parameter estimates, and a suggested value is 0.001.
  * How does one choose $C$ and $\delta$?
  * What is the output of the R function(s) and how does one interpret it?
 
-### Example 1:  Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
+#### Example 1:  Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
 
 Fitting auto.arima model gives an ARIMA(1,1,1).
 
@@ -490,7 +490,8 @@ print(nile.outliers$fit)
 ```
 
 
-### Example 2. Outliers in price of chicken in USA from 1924 to 1993. The data shows the price was gradually decreasing, but there might be an outliers hidden in the trends. 
+#### Example 2. Outliers in price of chicken in USA from 1924 to 1993. 
+The data shows the price was gradually decreasing, but there might be an outliers hidden in the trends. 
 ```{r,echo=TRUE}
 library(fma)
 plot(chicken,main="Chicken price in USA from 1924 to 1993")
