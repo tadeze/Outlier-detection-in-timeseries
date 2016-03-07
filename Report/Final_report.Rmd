@@ -444,7 +444,25 @@ be appropriate, but in any case multiple values should be tried to assess
 how sensitive the results are to $C$. The value of $\epsilon$ controls the
 accuracy of the parameter estimates, and a suggested value is 0.001.
 
-# Examples 
+# Examples
+
+### R package`tsoutliers` 
+Following the approach described in Chen & Liu (1993), an automatic procedure for detection of outliers in time series is implemented in the package tsoutliers. This package implements a procedure based on the approach described in Chen and Liu (1993) for automatic detection of outliers in time series. Innovational outliers, additive outliers, level shifts,
+temporary changes and seasonal level shifts are considered. 
+
+The function `tso` is the main interface for the automatic procedure. The functions `locate.outliers.oloop`
+and `remove.outliers` implement respectively the first and second stages of the procedure. In practice,
+the user may stick to use the function `tso`. All the options at any stage of the procedure can be defined through the arguments passed to `tso`. (CRAN documentation)
+
+`tso(y, xreg = NULL, cval = NULL, delta = 0.7, n.start = 50,
+        types = c("AO", "LS", "TC"),
+        maxit = 1, maxit.iloop = 4, cval.reduce = 0.14286,
+        remove.method = c("en-masse", "bottom-up"),
+        remove.cval = NULL,
+        tsmethod = c("auto.arima", "arima", "stsm"),
+        args.tsmethod = NULL, args.tsmodel = NULL, logfile = NULL)
+`
+
 
 [*Possible questions to address, in addition to showing one or two examples:*]
 
@@ -516,7 +534,6 @@ print(chicken.outlier$outliers)
 ```
 As we can see the main two outliers are `level shift outlier` in 1935. and `temporal change` outlier in 1943. 
 
-# Conclusion
 
 # References
 
@@ -540,6 +557,7 @@ Outliers," *Journal of the American Statistical Association*, 81, 132--141.
 Galeano,Pena (2013) "Finding Outliers in Linear and Nonlinear Time Series" Chapter
 Robustness and Complex Data Structures pp 243-260
 
+https://cran.r-project.org/web/packages/tsoutliers/tsoutliers.pdf
 
 # Appendix
 
