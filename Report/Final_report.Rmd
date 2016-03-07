@@ -446,7 +446,7 @@ accuracy of the parameter estimates, and a suggested value is 0.001.
 
 # Examples
 
-### R package`tsoutliers` 
+### R package `tsoutliers` 
 Following the approach described in Chen & Liu (1993), an automatic procedure for detection of outliers in time series is implemented in the package tsoutliers. This package implements a procedure based on the approach described in Chen and Liu (1993) for automatic detection of outliers in time series. Innovational outliers, additive outliers, level shifts,
 temporary changes and seasonal level shifts are considered. 
 
@@ -474,7 +474,39 @@ the user may stick to use the function `tso`. All the options at any stage of th
  * How does one choose $C$ and $\delta$?
  * What is the output of the R function(s) and how does one interpret it?
 
-#### Example 1:  Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
+
+#### Example 1: Outliers in weekly closings of the Dow-Jones industrial average, July 1971- August 1974.
+```{r,fig.align='left',echo=TRUE,eval=TRUE}
+library('fma')
+dj <- read.csv('../data/weekly-closings-of-the-dowjones-.csv')
+plot(as.numeric(dj[,2]),main="Weekly closings of the Dow-Jones industrial average",col="blue",xlab=" Weeks ")
+lines(dj$Week,as.numeric(dj[,2]))
+ 
+#data(Nile)
+dj.ts <-ts(dj$Weekly.closings.of.the.Dow.Jones.industrial.average..July.1971...August.1974,frequency = 1)
+fit<- auto.arima(dj.ts)
+```
+Applying the two stage outlier detection process using `tsoutliers` function
+generates
+
+```{r,eval=TRUE,echo=TRUE}
+dj.outliers <- tso(dj.ts,types=c("AO","LS","TC","IO"),maxit = 30)
+plot(dj.outliers)
+```
+The outlier detected are 
+```{r, echo=TRUE,results='markup'}
+# Outlier values 
+print(dj.outliers$outliers)
+```
+The main detected outliers are `level shift (LS)` at index 73 and 84, `Additive outlier (AO)` at 96, 163, 91 and `Temporal Change (TC)` at 111.    Additinaly, the fitted ARIMA model is ARIMA( 0,1,0).
+
+```{r, echo=TRUE,results='markup'}
+# Outlier values 
+print(dj.outliers$fit)
+```
+
+
+#### Example 2:  Outlier in measurement of the annual flow of the river Nile at Ashwan from 1871-1970.
 
 Fitting auto.arima model gives an ARIMA(1,1,1).
 
@@ -487,6 +519,7 @@ fit<- auto.arima(Nile)
 #fits with ARIMA(1,1,1)
 print(fit)
 ```
+
 
 Applying the two stage outlier detection process using `tsoutliers` function
 generates
@@ -508,7 +541,7 @@ print(nile.outliers$fit)
 ```
 
 
-#### Example 2. Outliers in price of chicken in USA from 1924 to 1993. 
+#### Example 3. Outliers in price of chicken in USA from 1924 to 1993. 
 The data shows the price was gradually decreasing, but there might be an outliers hidden in the trends. 
 ```{r,echo=TRUE}
 library(fma)
