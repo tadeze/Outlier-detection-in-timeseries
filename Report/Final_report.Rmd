@@ -480,7 +480,7 @@ result$outliers
 
 Two outliers are detected, a temporary change starting in September 2011, and
 a level shift in December 2008. These outliers have clear interpretations (which
-is not often the case, have found): the terrorist attacks on 9/11 and the
+is not often the case, we have found): the terrorist attacks on 9/11 and the
 economic downturn of 2008 both severely impacted transportation services.
 
 Comparing the `tso` model fit to what the fit would have been
