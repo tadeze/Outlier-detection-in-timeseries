@@ -1,0 +1,33 @@
+---
+title: "Outliers in Time Series"
+author: |
+        | Amir Azarbakht, Michael Dumelle,
+        | Camden Lopez & Tadesse Zemicheal
+date: "March 10, 2016"
+output: beamer_presentation
+---
+
+## Outlier Models
+
+- ARIMA($p, d, q$) process
+
+\begin{equation*}
+X_t = \frac{\theta(B)}{\alpha(B) \phi(B)} Z_t 
+\end{equation*}
+
+- Roots of $\theta(B), \phi(B)$ outside unit circle
+- $\alpha(B) = (1 - B)^d$
+- $Z_t \sim_{iid}$ Normal(0, $\sigma^2$)
+
+## Outlier Models
+
+- Observed series
+\begin{equation*}
+X^*_t = X_t + \text{ outlier effect}
+\end{equation*}
+
+- Four models for outlier effect:
+    - Additive outlier (AO)
+    - Level shift (LS)
+    - Temporary change (TC)
+    - Innovational outlier (IO)
