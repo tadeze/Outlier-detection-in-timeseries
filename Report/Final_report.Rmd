@@ -2,7 +2,7 @@
 title: "Outliers in Time Series"
 subtitle: "ST 565 Final Project (Winter 2016)"
 author: |
-        | Amir Azarbakht, Michael Dumelle,
+        | Amirhosein "Emerson" Azarbakht, Michael Dumelle,
         | Camden Lopez & Tadesse Zemicheal
 fontsize: 12pt
 output: pdf_document
@@ -511,11 +511,13 @@ adjusted <- TSI - result$effects
 
 # Conclusion
 
-By using the methods described above, we can identify and estimate each of the four
-outlier effects.  This enables us to build a time series model free of outliers 
-and construct accurate outlier-free forecasts. The tsoutliers R package allows us 
-to easily obtain these outlier effect estimates and produce clear graphs displaying 
-time series models contaminated with outlers vs outlier-free models.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec nisl libero.
+In tellus urna, vehicula id mauris eu, congue aliquet dolor. Vestibulum commodo,
+erat ornare pharetra consequat, mauris nulla viverra erat, at aliquam risus
+massa eget lectus. Nam quis tristique nibh. Suspendisse vitae dapibus orci.
+Ut id elit sit amet purus accumsan condimentum a ac justo. Donec venenatis
+blandit lacus id ultricies. Ut vitae interdum lacus. Mauris quis neque nec
+libero bibendum tristique.
 
 # References
 
