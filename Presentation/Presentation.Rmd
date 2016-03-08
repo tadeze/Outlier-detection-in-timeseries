@@ -89,7 +89,7 @@ X^*_t = X_t + \text{ outlier effect}
     - Large $|\hat{\tau}|$ indicates an outlier
 - When multiple outliers present, can mask one another,
 cause biased estimates of effects
-    - Need to repeatedly adjust series, re-estimates effects
+    - Need to repeatedly adjust series, re-estimate effects
 
 ## Outlier Detection
 
