@@ -208,7 +208,6 @@ innov_outlier_effect <- function (ar, ma, lag) {
 }
 
 # Calculate and plot effects of each outlier type
-
 par(mfrow = c(2, 2))
 n <- 16
 t <- 1:n
@@ -461,6 +460,7 @@ monthly measure of the volume of services provided by the for-hire
 transportation sector, including both freight and passenger carriers.
 
 ```{r echo = FALSE, fig.height = 3, fig.width = 6, fig.align = "center"}
+# Application of tsoutliers::tso to Transportation Services Index
 TSI <- read.csv("transport.csv", skip = 10)
 TSI <- ts(TSI$TSITTL, start = c(2000, 1), frequency = 12)
 plot(TSI)
@@ -655,20 +655,17 @@ Chen, C. and Liu, Lon-Mu (1993), "Joint Estimation of Model Parameters and
 Outlier Effects in Time Series," *Journal of the American Statistical
 Association*, 88, 284--297.
 
-Chen, C., and Tiao, G. C. (1990), "Random Level Shift Time Series Models,
-ARIMA Approximation, and Level Shift Detection," *Journal of Business and
-Economic Statistics*, 8, 170--186.
+Galeano, Pena (2013), "Finding Outliers in Linear and Nonlinear Time Series",
+*Robustness and Complex Data Structures*, Springer, 243--260.
 
-Fox, A. J. (1972), "Outliers in Time Series," *Journal of the Royal Statistical
-Society*, Ser. B, 34, 350--363.
+Lopez-de-Lacalle, Javier (2015), "Package 'tsoutliers'", CRAN documentation,
+https://cran.r-project.org/web/packages/tsoutliers/tsoutliers.pdf.
 
 Tsay, Ruey S. (1986), "Time Series Model Specification in the Presence of
 Outliers," *Journal of the American Statistical Association*, 81, 132--141.
 
-Galeano,Pena (2013) "Finding Outliers in Linear and Nonlinear Time Series" Chapter
-Robustness and Complex Data Structures pp 243-260
-
-https://cran.r-project.org/web/packages/tsoutliers/tsoutliers.pdf
+Wei, William S. (1990), "Intervention Analysis and Outlier Detection",
+*Time Series Analysis*, Addison-Wesley, 184--203.
 
 # Appendix
 
