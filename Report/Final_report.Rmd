@@ -8,13 +8,6 @@ fontsize: 12pt
 output: pdf_document
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
-           results = "hide", fig.height = 3, fig.width = 6)
-library('tsoutliers')
-library('ggplot2')
-```
-
 # Introduction
 
 Data sets often contain observations that are far from other observations.
@@ -196,7 +189,7 @@ that the effect depends on the model.
 
 \vspace{0.5cm}
 
-```{r fig.width = 6, fig.height = 5, fig.align = "center"}
+```{r echo = FALSE, fig.width = 6, fig.height = 5, fig.align = "center"}
 # Calculate effect of IO given AR and MA coefficients, out to given lag
 innov_outlier_effect <- function (ar, ma, lag) {
   ar <- ifelse(rep(is.null(ar), lag), rep(0, lag),
@@ -270,7 +263,7 @@ unknown number of outliers occuring at unknown times in a time series. The
 outliers may be any of the four types described above. First, we describe
 how the effects of a single outlier can be estimated using linear regression
 Then we point out some practical issues, and the section culminates in a
-description of the procedure proposed by Chen and Liu (1993) to jointly
+description of the procedure proposed by Chen and Liu to jointly
 estimate model parameters and outlier effects in a series.
 
 ## Estimating the Effect of a Single Outlier
@@ -346,8 +339,8 @@ issues.
 
 First, estimates for the model parameters will be influenced by outliers.
 Eventually we want parameter estimates uninfluenced by outliers, but we have
-to start somehow. Cycling through estimation of model parameters, detection
-of outliers, and adjustment of the series to remove outlier effects seems a
+to start somehow. Iterating repeatedly through estimation of model parameters,
+detection of outliers, and adjustment of the series to remove outlier effects seems a
 reasonable strategy. This is what procedure described below does.
 
 The other issue is that the $\hat{\omega}$ values are calculated using
@@ -448,15 +441,87 @@ be appropriate, but in any case multiple values should be tried to assess
 how sensitive the results are to $C$. The value of $\epsilon$ controls the
 accuracy of the parameter estimates, and a suggested value is 0.001.
 
-# Examples
+# Application
+
+Chen and Liu's procedure for outlier detection/estimation is implemented in the R
+package `tsoutliers`. The function `tso` is the main interface for the procedure.
+It takes as input a time series object and fits a seasonal ARIMA (or simpler)
+model while detecting and estimating the effects of outliers. It can look for
+AO, LS, TC, and IO outliers, plus seasonal level shifts (SLS). The `tso` arguments
+allow one to specify parameters, including $C$ and $\delta$, and the types of outliers
+to consider. Another argument can specify the method for fitting a (seasonal)
+ARIMA model. As mentioned earlier, one option is to have the model automatically
+selected using, for example, `auto.arima`.
+
+## Transportation Services Index
+
+Now we apply the `tso` function to data from the US Bureau of Transportation
+Statistics. The time series is the Transportation Services Index (TSI), a
+monthly measure of the volume of services provided by the for-hire
+transportation sector, including both freight and passenger carriers.
+
+```{r echo = FALSE, fig.height = 3, fig.width = 6, fig.align = "center"}
+TSI <- read.csv("transport.csv", skip = 10)
+TSI <- ts(TSI$TSITTL, start = c(2000, 1), frequency = 12)
+plot(TSI)
+```
+
+When `tso` is applied with `tsmethod = "auto.arima"`, the suggested model
+has a seasonal AR(1) component, but the coefficient is insignificant. So we
+force `tso` to fit only the non-seasonal ARIMA(1, 1, 0) model using the
+`tsmethod` and `args.tsmethod` arguments.
+
+```{r}
+library(tsoutliers)
+result <- tso(TSI, types = c("AO", "LS", "TC", "IO"), tsmethod = "arima",
+              args.tsmethod = list(order = c(1, 1, 0)))
+result$outliers
+```
+
+Two outliers are detected, a temporary change starting in September 2011, and
+a level shift in December 2008. These outliers have clear interpretations (which
+is not often the case, have found): the terrorist attacks on 9/11 and the
+economic downturn of 2008 both severely impacted transportation services.
+
+Comparing the `tso` model fit to what the fit would have been
+without adjusting for outliers, we find that accounting for outliers
+results in a larger (absolute value) AR(1) coefficient and, understandably,
+a smaller estimated $\sigma_a^2$:
+
+```{r}
+fit <- arima(TSI, order = c(1, 1, 0))
+rbind(result$fit$coef, c(fit$coef, NA, NA))
+rbind(result$fit$sigma2, fit$sigma2)
+```
+
+Finally, one can plot the original and adjusted series together with the
+outlier effects:
+
+```{r fig.height = 3.5, fig.width = 6, fig.align = "center"}
+plot(result)
+```
+
+One can obtain the outlier effects at each time point from the `effects`
+component of the `tso` output.  From there, you can obtain the outlier-adjusted
+time series by subtracting these effects from the original time series.
+
+```{r}
+adjusted <- TSI - result$effects
+```
+
+# Conclusion
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec nisl libero.
+In tellus urna, vehicula id mauris eu, congue aliquet dolor. Vestibulum commodo,
+erat ornare pharetra consequat, mauris nulla viverra erat, at aliquam risus
+massa eget lectus. Nam quis tristique nibh. Suspendisse vitae dapibus orci.
+Ut id elit sit amet purus accumsan condimentum a ac justo. Donec venenatis
+blandit lacus id ultricies. Ut vitae interdum lacus. Mauris quis neque nec
+libero bibendum tristique.
+
+# OK to delete?
 
 ### R package `tsoutliers` 
-Following the approach described in Chen & Liu (1993), an automatic procedure for detection of outliers in time series is implemented in the package tsoutliers. This package implements a procedure based on the approach described in Chen and Liu (1993) for automatic detection of outliers in time series. Innovational outliers, additive outliers, level shifts,
-temporary changes and seasonal level shifts are considered. 
-
-The function `tso` is the main interface for the automatic procedure. The functions `locate.outliers.oloop`
-and `remove.outliers` implement respectively the first and second stages of the procedure. In practice,
-the user may stick to use the function `tso`. All the options at any stage of the procedure can be defined through the arguments passed to `tso`. (CRAN documentation)
 
 ```{r,eval=FALSE,echo=TRUE}
 tso(y, xreg = NULL, cval = NULL, delta = 0.7, n.start = 50,
@@ -545,7 +610,7 @@ The main detected outliers are `level shift (LS)` in 1899 and `Additive outlier 
 # Outlier values 
 print(nile.outliers$fit)
 ```
-One can explicitly obtain the outlier effects at each time point from the effects argument after running the tsoutliers command.  From there, you can obtain the outlier adjusted time series taking the original time series and subtracting these effects.
+
 
 ```{r, echo=TRUE,results='markup'}
 plot(Nile - nile.outliers$effects, xlab = "Time", ylab = "River Flow", main = "Outlier Adjusted Time Series")
