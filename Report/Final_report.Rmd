@@ -27,7 +27,7 @@ to develop methods for avoiding or removing outlier effects.
 With time series data, because of the time-dependent correlation structure
 among the observations, outliers present unique problems and have to be dealt
 with differently from outliers in i.i.d. observations. Suppose we want to model
-a process as ARMA($p, q$). The data may contain measurement errors or may
+a process as ARIMA($p, d, q$). The data may contain measurement errors or may
 have been affected by some unusual event(s). We would like a way to detect
 outliers, which we might investigate more closely to determine their origin,
 and adjust the series so that we can fit a model on what we believe the series
@@ -39,29 +39,30 @@ linear regression. Large estimated effect at a given time point suggests an
 outlier at that point. The estimate of outlier effect also allows us to remove
 the effect and proceed to model the adjusted series. We will look at a
 procedure developed by Chen and Liu (1993) to detect and estimate outlier
-effects while also fitting an ARMA($p, q$) model. The R package `tsoutliers`
+effects while also fitting an ARIMA($p, d, q$) model. The R package `tsoutliers`
 conveniently implements this procedure, and we will see examples of applying it
 to real time series.
 
 # Outlier Models
 
 The following models describe four different ways outliers can enter into an
-ARMA($p, q$) process $X_t$. For simplicity, we consider only non-seasonal,
-non-integrated processes, though the models can be extended for seasonal
-ARIMA processes. $X_t$ is described by
+ARIMA($p, d, q$) process $X_t$. For simplicity, we consider only non-seasonal
+processes, though the models can be extended for seasonal ARIMA processes.
+$X_t$ is described by
 
 \begin{equation}
-X_t = \frac{\theta(B)}{\phi(B)} Z_t 
+X_t = \frac{\theta(B)}{\alpha(B) \phi(B)} Z_t 
 \end{equation}
 
-where $Z_t \sim_{iid}$ Normal$(0, \sigma^2)$. Now let $X^*_t$ denote the
-observed series, which is contaminated by outliers. The outlier effect
-on the series is $X^*_t - X_t$.
+where $\theta(B)$ and $\phi(B)$ have roots strictly outside the unit circle,
+$\alpha(B) = (1 - B)^d$, and $Z_t \sim_{iid}$ Normal$(0, \sigma^2)$.
+Now let $X^*_t$ denote the observed series, which is contaminated by outliers.
+The outlier effect on the series is $X^*_t - X_t$.
 
 Consider two broad types of outlier effects. Either the effect is independent
 of the underlying $X_t$ process, or the effect gets incorporated into the
-process and is propagated through the "memory" described by $\phi(B)$ and
-$\theta(B)$. Among the first type, the effect can be a simple impulse at one
+process and is propagated through the "memory" described by $\theta(B), \phi(B)$
+and $\alpha(B)$. Among the first type, the effect can be a simple impulse at one
 time point---this is referred to as an additive outlier (AO)---or the effect
 can decay over time---a temporary change (TC)---or remain permanently---a
 level shift (LS). The second type, where the effect gets propagated by the
@@ -89,7 +90,7 @@ X^*_t - X_t = \omega I_t(t_1)
 \end{equation}
 
 or $\omega$ at $t = t_1$ and zero elsewhere. The effect does not depend on
-the ARMA process and has no lingering effects.
+the ARIMA process and has no lingering effects.
 
 ## Level Shift (LS)
 
@@ -119,7 +120,7 @@ effect clear:
 \end{equation}
 
 The application of $(1 - B)$ carries the effect over to all successive points
-in the series. Note that again the effect does not depend on the ARMA process.
+in the series. Note that again the effect does not depend on the ARIMA process.
 
 ## Temporary Change (TC)
 
@@ -163,34 +164,34 @@ might be an earthquake creating an impulse in seismic activity.)
 Then $X^*_t$ becomes
 
 \begin{equation}
-X^*_t = \frac{\theta(B)}{\phi(B)}\left[Z_t + \omega I_{t_1}(t)\right]
+X^*_t = \frac{\theta(B)}{\alpha(B) \phi(B)}\left[Z_t + \omega I_{t_1}(t)\right]
 \end{equation}
 
 where $I_{t_1}(t) = 1$ for $t = t_1$ and 0 otherwise. Rearranging and
 substituting in $X_t$, we see that the outlier effect is
 
 \begin{equation}
-X^*_t - X_t = \frac{\theta(B)}{\phi(B)} \omega I_{t_1}(t)
+X^*_t - X_t = \frac{\theta(B)}{\alpha(B) \phi(B)} \omega I_{t_1}(t)
 \end{equation}
 
-Thus, the outlier effect depends on the ARMA model through $\theta(B)$ and
-$\phi(B)$. When an IO occurs at $t = t_1$, the effect of this outlier at
-$t = t_1 + k$, $k \geq 0$, is
+Thus, the outlier effect depends on the ARIMA model. When an IO occurs at
+$t = t_1$, the effect of this outlier at $t = t_1 + k$, $k \geq 0$, is
 
 \begin{align}
-X^*_{t_1 + k} - X_{t_1 + k} &= \frac{\theta(B)}{\phi(B)} \omega I_{t_1}(t_1 + k) \\
+X^*_{t_1 + k} - X_{t_1 + k} &= \frac{\theta(B)}{\alpha(B) \phi(B)} \omega I_{t_1}(t_1 + k) \\
 &= \psi(B) \omega I_{t_1}(t_1 + k) \\
 &= \psi_k \omega
 \end{align}
 
-where $\psi(B) = \theta(B) / \phi(B)$ and $\psi_k$ is the $k^{th}$ coefficient
-of $\psi(B)$, corresponding to the $B^k$ term. Because the time series is
+where $\psi(B) = \frac{\theta(B)}{\alpha(B) \phi(B)}$ and $\psi_k$ is the $k^{th}$ coefficient
+of $\psi(B)$, corresponding to the $B^k$ term. If the time series is
 stationary, the $\psi_k$ coefficients tend to zero as $k$ increases. This
-implies that the IO effect diminishes and becomes zero given enough time. 
+implies that the IO effect in a stationary series diminishes and becomes zero
+given enough time. In a non-stationary series, an IO can cause a permanent
+level shift.
 
 The various outlier effects are summarized by the following figure. The IO
-effect is shown with four different ARMA models to demonstrate that the effect
-depends on the model.
+effect is shown with four different stationary ARMA models.
 
 \vspace{0.5cm}
 
@@ -272,17 +273,17 @@ estimate model parameters and outlier effects in a series.
 
 ## Estimating the Effect of a Single Outlier
 
-Suppose we have an observed time series $X^*_t$ that arose from an ARMA($p, q$)
-process $X_t$ with one outlier at time $t_1$. For now, assume we know the ARMA
+Suppose we have an observed time series $X^*_t$ that arose from an ARIMA($p, d, q$)
+process $X_t$ with one outlier at time $t_1$. For now, assume we know the ARIMA
 model parameters, $t_1$, and the type of outlier. We will find an estimate
 of the outlier magnitude $\omega$. (Later we discuss how this calculation is
 useful when the locations and types of outliers are unknown.)
 
 \begin{equation}
-\pi(B) = \frac{\phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
+\pi(B) = \frac{\alpha(B) \phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
 \end{equation}
 
-Since $X_t = \frac{\theta(B)}{\phi(B)} Z_t$, applying $\pi(B)$ to $X_t$ would
+Since $X_t = \frac{\theta(B)}{\alpha(B) \phi(B)} Z_t$, applying $\pi(B)$ to $X_t$ would
 result in the purely random residuals, $Z_t$. But $X^*_t$ is contaminated
 by the outlier, so the residuals that result from applying $\pi(B)$ to
 $X^*_t$ are also contaminated. Let $\hat{e}_t = \pi(B) X^*_t$ be those
@@ -333,7 +334,7 @@ process.
 
 ## Using the Single-Outlier Estimate
 
-For the estimation of $\omega$, we assumed the ARMA model parameters and the
+For the estimation of $\omega$, we assumed the ARIMA model parameters and the
 outlier type and location $t_1$ were known. In practice, they are not. The model
 parameters must first be estimated, then $\hat{\omega}$ can be calculated
 for each type of outlier at each $t_1 = 1, \dots, n$. If $\hat{\omega}$ is large
@@ -387,11 +388,11 @@ residual at time $t_1$ omitted.
 ## Detection and Estimation Procedure
 
 Chen and Liu (1993) proposed an iterative procedure for detecting outliers,
-estimating their effects, and estimating the parameters of an ARMA model
+estimating their effects, and estimating the parameters of an ARIMA model
 to fit the series after adjusting for outlier effects. The procedure assumes
-that the order of the ARMA model is known. We will see that implementation
+that the order of the ARIMA model is known. We will see that implementation
 of this procedure in `tsoutliers` can also automatically choose the order of
-the ARMA model.
+the ARIMA model.
 
 The procedure has three stages. In Stage I, outliers are accumulated one by one
 in order of descending magnitude of $\hat{\tau}$ statistic. In Stage II, any
