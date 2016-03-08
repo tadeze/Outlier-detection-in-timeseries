@@ -191,7 +191,8 @@ given enough time. In a non-stationary series, an IO can cause a permanent
 level shift.
 
 The various outlier effects are summarized by the following figure. The IO
-effect is shown with four different stationary ARMA models.
+effect is shown with four different stationary ARMA models to emphasize
+that the effect depends on the model.
 
 \vspace{0.5cm}
 
@@ -224,7 +225,7 @@ t1 <- 6 # Outlier here
 ar <- c(-0.4, -0.2, 0.048)
 ma <- c(-0.4, -0.2, 0.048)
 io1 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
-plot(io1, type = 'l', ylim = c(-1, 1), lty = 1,
+plot(io1, type = 'l', ylim = c(-1, 1), lty = 2,
      xlab = "Time", ylab = "Effect", main = "IO")
 ar <- 0.5
 ma <- c(0.4, 0.2, 0.048)
@@ -232,21 +233,22 @@ io2 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
 lines(io2, lty = 2)
 ma <- -0.7
 io3 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
-lines(io3, lty = 3)
+lines(io3, lty = 2)
 ma <- NULL
 io4 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
-lines(io4, lty = 4)
+lines(io4, lty = 2)
+lines(c(0, t1 - 1, t1), c(0, 0, 1), lwd = 1.5)
 
 # AO
 ao <- rep(0, n)
 ao[t1] <- 1
-plot(ao, type = 'l', ylim = c(-0.1, 1),
+plot(ao, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
      xlab = "Time", ylab = "Effect", main = "AO")
 
 # LS
 ls <- rep(0, n)
 ls[t1:n] <- 1
-plot(ls, type = 'l', ylim = c(-0.1, 1),
+plot(ls, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
      xlab = "Time", ylab = "Effect", main = "LS")
 
 # TC
@@ -256,7 +258,7 @@ delta <- 0.7
 for (k in (t1 + 1):n) {
   tc[k] <- delta * tc[k - 1]
 }
-plot(tc, type = 'l', ylim = c(-0.1, 1),
+plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
      xlab = "Time", ylab = "Effect", main = "TC")
 
 ```
@@ -354,11 +356,12 @@ compared immediately. Dividing $\hat{\omega}$ by its standard error results in
 standardized statistics which are approximately normally distributed:
 
 \begin{equation}
-\hat{\tau} = \frac{\hat{\omega}}{\sqrt{\sigma_a^2 / \sum_{t = t_1}^{n} x^2_t}}
+\hat{\tau} = \frac{\hat{\omega}}{\hat{\sigma}_a / \sqrt{\sum_{t = t_1}^{n} x^2_t}}
 \end{equation}
 
-where $\sigma_a^2$ is the variance of $Z_t$. The $\hat{\tau}$ statistics allow for
-comparison among various outlier types at various times.
+where $\hat{\sigma}_a$ is an estimate of $\sqrt{\text{Var}(Z_t)}$ (see
+comment below). The $\hat{\tau}$ statistics allow for comparison among various
+outlier types at various times.
 
 ## Effects of Multiple Outliers
 
