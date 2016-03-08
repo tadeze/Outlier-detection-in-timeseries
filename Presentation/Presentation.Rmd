@@ -1,7 +1,7 @@
 ---
 title: "Outliers in Time Series"
 author: |
-        | Amir Azarbakht, Michael Dumelle,
+        | Amirhosein "Emerson" Azarbakht, Michael Dumelle,
         | Camden Lopez & Tadesse Zemicheal
 date: "March 10, 2016"
 output: beamer_presentation
