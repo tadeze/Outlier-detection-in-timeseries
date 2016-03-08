@@ -31,3 +31,95 @@ X^*_t = X_t + \text{ outlier effect}
     - Level shift (LS)
     - Temporary change (TC)
     - Innovational outlier (IO)
+
+## Outlier Models
+
+\begin{align*}
+\text{AO:}\hspace{1cm}X^*_t &= X_t + \omega I_t(t_1) \\
+\text{LS:}\hspace{1cm}X^*_t &= X_t + \frac{1}{1 - B} \omega I_t(t_1) \\
+\text{TC:}\hspace{1cm}X^*_t &= X_t + \frac{1}{(1 - \delta B)} \omega I_t(t_1) \\
+\text{IO:}\hspace{1cm}X^*_t &= \frac{\theta(B)}{\alpha(B) \phi(B)}\left[Z_t + \omega I_{t_1}(t)\right]
+\end{align*}
+
+## Outlier Models
+
+\includegraphics[scale=0.5]{effects.png}
+
+## Outlier Estimation
+
+- Obtain residuals $\hat{e}_t$ from the observed series $X^*_t$ by applying
+\begin{equation*}
+\pi(B) = \frac{\alpha(B) \phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
+\end{equation*}
+- If no outliers, what's left is $Z_t$: $\pi(B) X_t = Z_t$
+- When outlier present, residuals $\hat{e}_t = \pi(B) X^*_t$ reveal outlier effect
+
+## Outlier Estimation
+
+- Residuals for each type of outlier:
+\begin{align*}
+\text{IO:}\hspace{1cm}\hat{e}_t &= \omega I_t(t_1) + Z_t \\
+\text{AO:}\hspace{1cm}\hat{e}_t &= \omega \pi(B) I_t(t_1) + Z_t \\
+\text{LS:}\hspace{1cm}\hat{e}_t &= \omega \frac{\pi(B)}{1 - B} I_t(t_1) + Z_t \\
+\text{TC:}\hspace{1cm}\hat{e}_t &= \omega \frac{\pi(B)}{1 - \delta B} I_t(t_1) + Z_t
+\end{align*}
+- All have the form of simple linear regression:
+\begin{equation*}
+\hat{e}_t = \omega x_t + Z_t
+\end{equation*}
+
+## Outlier Estimation
+
+- Least-squares estimate:
+\begin{equation*}
+\hat{\omega} = \frac{\sum_{t = t_1}^{n} \hat{e}_t x_{t}}{\sum_{t = t_1}^{n} x^2_{t}}
+\end{equation*}
+
+- Divide by standard error:
+\begin{equation*}
+\hat{\tau} = \frac{\hat{\omega}}{\hat{\sigma} / \sqrt{\sum_{t = t_1}^{n} x^2_t}}
+\end{equation*}
+    - Approximately $\sim$ Normal(0, 1)
+
+## Outlier Detection
+
+- At each $t = 1, \dots, n$,
+- For each outlier type (AO, LS, TC, IO),
+    - Estimate outlier effect $\hat{\omega}$ and calculate $\hat{\tau}$
+    - Large $|\hat{\tau}|$ indicates an outlier
+- When multiple outliers present, can mask one another,
+cause biased estimates of effects
+    - Need to repeatedly adjust series, re-estimates effects
+
+## Outlier Detection
+
+- Iterative procedure for detecting outliers, adjusting series,
+and fitting (seasonal) ARIMA model:
+    - Chen, C. and Liu, Lon-Mu (1993), "Joint Estimation of Model Parameters and
+Outlier Effects in Time Series," *Journal of the American Statistical
+Association*, 88, 284--297.
+
+- Three stages:
+    1. Locate outliers in order of descending magnitude ($|\hat{\tau}|$)
+    2. Drop outliers that are now insignificant after accounting for the others
+    3. Make final estimates of model parameters and obtain final set of outliers
+- Implemented in `tso` function in `tsoutliers` R package
+
+## Illustrative Example
+
+- We applied `tso` to time series data from the US Bureau of Transportation
+Statistics
+- Transportation Services Index (TSI), monthly measure of volume of services
+provided by for-hire transportation sector
+
+\centering
+\includegraphics[scale = 0.3]{tsi.png}
+
+## Illustrative Example
+
+- `tso` found two outliers:
+    - Temporary Change outlier in Sept. 2001
+    - Level Shift outlier in Dec. 2008
+
+\centering
+\includegraphics[scale = 0.3]{tsioutliers.png}
