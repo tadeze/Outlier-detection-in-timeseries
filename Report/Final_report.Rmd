@@ -348,10 +348,10 @@ compared immediately. Dividing $\hat{\omega}$ by its standard error results in
 standardized statistics which are approximately normally distributed:
 
 \begin{equation}
-\hat{\tau} = \frac{\hat{\omega}}{\hat{\sigma}_a / \sqrt{\sum_{t = t_1}^{n} x^2_t}}
+\hat{\tau} = \frac{\hat{\omega}}{\hat{\sigma} / \sqrt{\sum_{t = t_1}^{n} x^2_t}}
 \end{equation}
 
-where $\hat{\sigma}_a$ is an estimate of $\sqrt{\text{Var}(Z_t)}$ (see
+where $\hat{\sigma}$ is an estimate of $\sqrt{\text{Var}(Z_t)}$ (see
 comment below). The $\hat{\tau}$ statistics allow for comparison among various
 outlier types at various times.
 
@@ -371,11 +371,11 @@ The procedure described below detects outliers one at a time but attempts to
 solve the bias and masking problem by repeatedly adjusting and re-examining
 both the time series and the set of identified outliers.
 
-## Estimating $\sigma_a$
+## Estimating $\sigma$
 
-The $\hat{\tau}$ statistic requires an estimate of $\sigma_a$. Since we
+The $\hat{\tau}$ statistic requires an estimate of $\sigma$. Since we
 are assuming the presence of outliers which could bias the estimate upwards,
-it is important to use an estimate of $\sigma_a$ that is robust to outliers.
+it is important to use an estimate of $\sigma$ that is robust to outliers.
 Three options are the median absolute deviation (MAD), a trimmed standard
 deviation, and the usual standard deviation of residuals calculated with the
 residual at time $t_1$ omitted.
@@ -486,7 +486,7 @@ economic downturn of 2008 both severely impacted transportation services.
 Comparing the `tso` model fit to what the fit would have been
 without adjusting for outliers, we find that accounting for outliers
 results in a larger (absolute value) AR(1) coefficient and, understandably,
-a smaller estimated $\sigma_a^2$:
+a smaller estimated $\sigma^2$:
 
 ```{r}
 fit <- arima(TSI, order = c(1, 1, 0))
