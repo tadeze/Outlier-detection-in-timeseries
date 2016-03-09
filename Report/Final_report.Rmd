@@ -456,7 +456,7 @@ transportation sector, including both freight and passenger carriers.
 
 ```{r echo = FALSE, fig.height = 3, fig.width = 6, fig.align = "center"}
 # Application of tsoutliers::tso to Transportation Services Index
-TSI <- read.csv("transport.csv", skip = 10)
+TSI <- read.csv("../Data/transport.csv", skip = 10)
 TSI <- ts(TSI$TSITTL, start = c(2000, 1), frequency = 12)
 plot(TSI)
 ```

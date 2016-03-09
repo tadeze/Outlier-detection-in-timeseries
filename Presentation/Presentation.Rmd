@@ -7,6 +7,69 @@ date: "March 10, 2016"
 output: beamer_presentation
 ---
 
+## Motivating Example
+
+- Transportation Services Index (TSI): monthly measure of volume of services
+provided by for-hire transportation sector
+
+```{r echo = FALSE}
+TSI <- read.csv("../Data/transport.csv", skip = 10)
+TSI <- ts(TSI$TSITTL, start = c(2000, 1), frequency = 12)
+plot(TSI)
+```
+
+## Motivating Example
+
+- The `tso` function in the `tsoutliers` package automatically detects and
+fits a model to the series with outlier effects removed
+    - We'll describe how this works
+- Two outliers detected:
+    - Temporary Change outlier in Sept. 2001
+    - Level Shift outlier in Dec. 2008
+
+```{r echo = FALSE}
+library(tsoutliers)
+tso_output <- tso(TSI, types = c("AO", "LS", "TC", "IO"),
+              tsmethod = "arima",
+              args.tsmethod = list(order = c(1, 1, 0)))
+```
+
+```{r}
+tso_output$outliers
+```
+
+## Motivating Example
+
+```{r}
+plot(tso_output)
+```
+
+## Motivating Example
+
+```{r echo = FALSE}
+with_outliers <- arima(TSI, order = c(1, 1, 0))
+```
+
+- Fitting ARIMA(1, 1, 0) model...
+- Model fit without adjusting for outliers:
+    - $\hat{\alpha}_1 = `r with_outliers$coef[1]`$
+    - $\hat{\sigma}_2 = `r with_outliers$sigma2`$
+- Model fit after adjusting for outliers:
+    - $\hat{\alpha}_1 = `r tso_output$fit$coef[1]`$
+    - $\hat{\sigma}_2 = `r tso_output$fit$sigma2`$
+
+- Failing to adjust for outliers can result in
+    - Wrong model or biased parameter estimates
+    - Increased forecasting error
+
+## Outline
+
+- ~~Motivating example~~
+- Models to describe four types of outliers
+- Estimating outlier effects using linear regression
+- Detecting outliers
+- Using `tsoutliers::tso`
+
 ## Outlier Models
 
 - ARIMA($p, d, q$) process
@@ -43,7 +106,66 @@ X^*_t = X_t + \text{ outlier effect}
 
 ## Outlier Models
 
-\includegraphics[scale=0.5]{effects.png}
+```{r echo = FALSE}
+# Calculate effect of IO given AR and MA coefficients, out to given lag
+innov_outlier_effect <- function (ar, ma, lag) {
+  ar <- ifelse(rep(is.null(ar), lag), rep(0, lag),
+               c(ar, rep(0, lag - length(ar))))
+  ma <- ifelse(rep(is.null(ma), lag), rep(0, lag),
+               c(ma, rep(0, lag - length(ma))))
+  effect <- numeric(lag)
+  effect[1] <- 1
+  for (k in 1:(lag - 1)) {
+    effect[1 + k] <- ma[k]
+    for (j in 1:k) {
+      effect[1 + k] <- effect[1 + k] + ar[j] * effect[1 + k - j]
+    }
+  }
+  effect
+}
+# Calculate and plot effects of each outlier type
+par(mfrow = c(2, 2))
+n <- 16
+t <- 1:n
+t1 <- 6 # Outlier here
+# IO
+ar <- c(-0.4, -0.2, 0.048)
+ma <- c(-0.4, -0.2, 0.048)
+io1 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+plot(io1, type = 'l', ylim = c(-1, 1), lty = 2,
+     xlab = "Time", ylab = "Effect", main = "IO")
+ar <- 0.5
+ma <- c(0.4, 0.2, 0.048)
+io2 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io2, lty = 2)
+ma <- -0.7
+io3 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io3, lty = 2)
+ma <- NULL
+io4 <- c(rep(0, t1 - 1), innov_outlier_effect(ar, ma, n - t1 + 1))
+lines(io4, lty = 2)
+lines(c(0, t1 - 1, t1), c(0, 0, 1), lwd = 1.5)
+# AO
+ao <- rep(0, n)
+ao[t1] <- 1
+plot(ao, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
+     xlab = "Time", ylab = "Effect", main = "AO")
+# LS
+ls <- rep(0, n)
+ls[t1:n] <- 1
+plot(ls, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
+     xlab = "Time", ylab = "Effect", main = "LS")
+# TC
+tc <- rep(0, n)
+tc[t1] <- 1
+delta <- 0.7
+for (k in (t1 + 1):n) {
+  tc[k] <- delta * tc[k - 1]
+}
+plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
+     xlab = "Time", ylab = "Effect", main = "TC")
+
+```
 
 ## Outlier Estimation
 
@@ -51,7 +173,7 @@ X^*_t = X_t + \text{ outlier effect}
 \begin{equation*}
 \pi(B) = \frac{\alpha(B) \phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
 \end{equation*}
-- If no outliers, what's left is $Z_t$: $\pi(B) X_t = Z_t$
+- If there were no outliers, result is $Z_t$: $\pi(B) X_t = Z_t$
 - When outlier present, residuals $\hat{e}_t = \pi(B) X^*_t$ reveal outlier effect
 
 ## Outlier Estimation
@@ -83,13 +205,10 @@ X^*_t = X_t + \text{ outlier effect}
 
 ## Outlier Detection
 
-- At each $t = 1, \dots, n$,
-- For each outlier type (AO, LS, TC, IO),
+- At each $t = 1, \dots, n$, for each outlier type (AO, LS, TC, IO),
     - Estimate outlier effect $\hat{\omega}$ and calculate $\hat{\tau}$
     - Large $|\hat{\tau}|$ indicates an outlier
-- When multiple outliers present, can mask one another,
-cause biased estimates of effects
-    - Need to repeatedly adjust series, re-estimate effects
+- Once outlier is detected, effect can be subtracted to obtain adjusted series
 
 ## Outlier Detection
 
@@ -99,27 +218,27 @@ and fitting (seasonal) ARIMA model:
 Outlier Effects in Time Series," *Journal of the American Statistical
 Association*, 88, 284--297.
 
-- Three stages:
-    1. Locate outliers in order of descending magnitude ($|\hat{\tau}|$)
-    2. Drop outliers that are now insignificant after accounting for the others
-    3. Make final estimates of model parameters and obtain final set of outliers
+- Three stages with many iterations of outlier detection, series adjustment,
+and re-fitting the model
+    - Necessary to deal with masking, other issues with estimating outlier effects
+    one-at-a-time when multiple outliers are present
 - Implemented in `tso` function in `tsoutliers` R package
 
-## Illustrative Example
+## Outlier Detection
 
-- We applied `tso` to time series data from the US Bureau of Transportation
-Statistics
-- Transportation Services Index (TSI), monthly measure of volume of services
-provided by for-hire transportation sector
+```{r eval = FALSE, echo = TRUE}
+tso(y, cval = NULL, delta = 0.7,
+    types = c("AO", "LS", "TC"),
+    maxit = 1, maxit.iloop = 4,
+    tsmethod = c("auto.arima", "arima", "stsm"),
+    args.tsmethod = NULL)
+```
+- ~~Sometimes~~ Often fails or takes a long time
+- Might need to increase `maxit.iloop`
+- Might help to specify model to fit using `arima` instead of
+letting `auto.arima` choose the model
 
-\centering
-\includegraphics[scale = 0.3]{tsi.png}
+## The End
 
-## Illustrative Example
-
-- `tso` found two outliers:
-    - Temporary Change outlier in Sept. 2001
-    - Level Shift outlier in Dec. 2008
-
-\centering
-\includegraphics[scale = 0.3]{tsioutliers.png}
+- Thank you
+- "Please clap" --- Jeb Bush
