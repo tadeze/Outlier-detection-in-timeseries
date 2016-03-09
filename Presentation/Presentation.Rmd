@@ -7,6 +7,14 @@ date: "March 10, 2016"
 output: beamer_presentation
 ---
 
+## Outline
+
+- Motivating example
+- Models to describe four types of outliers
+- Estimating outlier effects using linear regression
+- Using estimated effects to detect outliers
+- R function `tsoutliers::tso`
+
 ## Motivating Example
 
 - Transportation Services Index (TSI): monthly measure of volume of services
@@ -61,14 +69,6 @@ with_outliers <- arima(TSI, order = c(1, 1, 0))
 - Failing to adjust for outliers can result in
     - Wrong model or biased parameter estimates
     - Increased forecasting error
-
-## Outline
-
-- ~~Motivating example~~
-- Models to describe four types of outliers
-- Estimating outlier effects using linear regression
-- Detecting outliers
-- Using `tsoutliers::tso`
 
 ## Outlier Models
 
@@ -235,10 +235,6 @@ tso(y, cval = NULL, delta = 0.7,
     tsmethod = c("auto.arima", "arima", "stsm"),
     args.tsmethod = NULL)
 ```
-- ~~Sometimes~~ Often fails or takes a long time
-- Might need to increase `maxit.iloop`
-- Might help to specify model to fit using `arima` instead of
-letting `auto.arima` choose the model
 
 ## The End
 
