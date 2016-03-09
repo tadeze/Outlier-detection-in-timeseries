@@ -173,7 +173,9 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 \begin{equation*}
 \pi(B) = \frac{\alpha(B) \phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
 \end{equation*}
-- If there were no outliers, result is $Z_t$: $\pi(B) X_t = Z_t$
+
+    - (Remember $X_t = \frac{\theta(B)}{\alpha(B) \phi(B)}$)
+- If there were no outliers, result is white noise: $\pi(B) X_t = Z_t$
 - When outlier present, residuals $\hat{e}_t = \pi(B) X^*_t$ reveal outlier effect
 
 ## Outlier Estimation
