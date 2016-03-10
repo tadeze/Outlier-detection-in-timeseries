@@ -7,6 +7,22 @@ date: "March 10, 2016"
 output: beamer_presentation
 ---
 
+## Intro
+
+Time series affected by external/interruptive events. 
+Examples:
+
+- holidays
+- strikes
+- policy changes
+- outbreak of war
+- unexpected political or economic crises
+
+=> Anomaly in data (observations inconsistent with the rest of the series)
+
+* measurement error
+* anomalous behavior
+
 ## Outline
 
 - Motivating example
