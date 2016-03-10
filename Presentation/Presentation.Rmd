@@ -19,9 +19,9 @@ Examples:
 - unexpected political or economic crises
 
 => Anomaly in data (observations inconsistent with the rest of the series)
-
 * measurement error
 * anomalous behavior
+
 
 ## Outline
 
@@ -30,6 +30,7 @@ Examples:
 - Estimating outlier effects using linear regression
 - Using estimated effects to detect outliers
 - R function `tsoutliers::tso`
+
 
 ## Motivating Example
 
@@ -42,6 +43,7 @@ TSI <- ts(TSI$TSITTL, start = c(2000, 1), frequency = 12)
 plot(TSI)
 ```
 
+
 ## Motivating Example
 
 - The `tso` function in the `tsoutliers` package automatically detects and
@@ -50,6 +52,7 @@ fits a model to the series with outlier effects removed
 - Two outliers detected:
     - Temporary Change outlier in Sept. 2001
     - Level Shift outlier in Dec. 2008
+
 
 ```{r echo = FALSE}
 library(tsoutliers)
@@ -62,11 +65,13 @@ tso_output <- tso(TSI, types = c("AO", "LS", "TC", "IO"),
 tso_output$outliers
 ```
 
+
 ## Motivating Example
 
 ```{r}
 plot(tso_output)
 ```
+
 
 ## Motivating Example
 
@@ -184,6 +189,7 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 
 ```
 
+
 ## Outlier Estimation
 
 - Obtain residuals $\hat{e}_t$ from the observed series $X^*_t$ by applying
@@ -195,6 +201,7 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 - If there were no outliers, result is white noise: $\pi(B) X_t = Z_t$
 - When outlier present at $t = t_1$, residuals $\hat{e}_t = \pi(B) X^*_t$
 for $t = t_1, \dots, n$ reveal outlier effect
+
 
 ## Outlier Estimation
 
@@ -209,6 +216,7 @@ for $t = t_1, \dots, n$ reveal outlier effect
 \begin{equation*}
 \hat{e}_t = \omega x_t + Z_t
 \end{equation*}
+
 
 ## Outlier Estimation
 
