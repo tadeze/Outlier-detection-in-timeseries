@@ -223,12 +223,10 @@ and fitting (seasonal) ARIMA model:
 Outlier Effects in Time Series," *Journal of the American Statistical
 Association*, 88, 284--297.
 
-1. Estimate model parameters, then locate outliers one-by-one,
-biggest $|\hat{\tau}|$ first, adjusting series each time
-2. Re-estimate model parameters, drop any outliers where $|\hat{\tau}|$ no longer
-big enough after accounting for other outlier effects
-3. Estimate final model parameters, repeat (1) and (2) using fixed parameters
-to get final set of outliers and effects
+- Three stages with many iterations of outlier detection, series adjustment,
+and re-fitting the model
+    - Necessary to deal with masking, other issues with estimating outlier effects
+    one-at-a-time when multiple outliers are present
 
 ## Outlier Detection
 
