@@ -101,7 +101,8 @@ X^*_t = X_t + \text{ outlier effect}
 \text{AO:}\hspace{1cm}X^*_t &= X_t + \omega I_t(t_1) \\
 \text{LS:}\hspace{1cm}X^*_t &= X_t + \frac{1}{1 - B} \omega I_t(t_1) \\
 \text{TC:}\hspace{1cm}X^*_t &= X_t + \frac{1}{(1 - \delta B)} \omega I_t(t_1) \\
-\text{IO:}\hspace{1cm}X^*_t &= \frac{\theta(B)}{\alpha(B) \phi(B)}\left[Z_t + \omega I_{t_1}(t)\right]
+\text{IO:}\hspace{1cm}X^*_t &= X_t + \frac{\theta(B)}{\alpha(B) \phi(B)} \omega I_t(t_1) \\
+                            &= \frac{\theta(B)}{\alpha(B) \phi(B)}\left[Z_t + \omega I_t(t_1)\right]
 \end{align*}
 
 ## Outlier Models
@@ -174,9 +175,10 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 \pi(B) = \frac{\alpha(B) \phi(B)}{\theta(B)} = 1 - \pi_1B - \pi_2B^2 - \pi_3B^3 - ...
 \end{equation*}
 
-    - (Remember $X_t = \frac{\theta(B)}{\alpha(B) \phi(B)}$)
+    - (Remember $X_t = \frac{\theta(B)}{\alpha(B) \phi(B)} Z_t$)
 - If there were no outliers, result is white noise: $\pi(B) X_t = Z_t$
-- When outlier present, residuals $\hat{e}_t = \pi(B) X^*_t$ reveal outlier effect
+- When outlier present at $t = t_1$, residuals $\hat{e}_t = \pi(B) X^*_t$
+for $t = t_1, \dots, n$ reveal outlier effect
 
 ## Outlier Estimation
 
@@ -187,7 +189,7 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 \text{LS:}\hspace{1cm}\hat{e}_t &= \omega \frac{\pi(B)}{1 - B} I_t(t_1) + Z_t \\
 \text{TC:}\hspace{1cm}\hat{e}_t &= \omega \frac{\pi(B)}{1 - \delta B} I_t(t_1) + Z_t
 \end{align*}
-- All have the form of simple linear regression:
+- All have the form of simple linear regression (w/o intercept):
 \begin{equation*}
 \hat{e}_t = \omega x_t + Z_t
 \end{equation*}
@@ -209,8 +211,9 @@ plot(tc, type = 'l', ylim = c(-0.1, 1), lwd = 1.5,
 
 - At each $t = 1, \dots, n$, for each outlier type (AO, LS, TC, IO),
     - Estimate outlier effect $\hat{\omega}$ and calculate $\hat{\tau}$
-    - Large $|\hat{\tau}|$ indicates an outlier
-- Once outlier is detected, effect can be subtracted to obtain adjusted series
+    - Large $|\hat{\tau}|$ ($> C$) indicates an outlier
+- Once outlier is detected, estimated effect can be subtracted to obtain
+adjusted series
 
 ## Outlier Detection
 
@@ -220,14 +223,16 @@ and fitting (seasonal) ARIMA model:
 Outlier Effects in Time Series," *Journal of the American Statistical
 Association*, 88, 284--297.
 
-- Three stages with many iterations of outlier detection, series adjustment,
-and re-fitting the model
-    - Necessary to deal with masking, other issues with estimating outlier effects
-    one-at-a-time when multiple outliers are present
-- Implemented in `tso` function in `tsoutliers` R package
+1. Estimate model parameters, then locate outliers one-by-one,
+biggest $|\hat{\tau}|$ first, adjusting series each time
+2. Re-estimate model parameters, drop any outliers where $|\hat{\tau}|$ no longer
+big enough after accounting for other outlier effects
+3. Estimate final model parameters, repeat (1) and (2) using fixed parameters
+to get final set of outliers and effects
 
 ## Outlier Detection
 
+- Implemented in `tso` function in `tsoutliers` R package
 ```{r eval = FALSE, echo = TRUE}
 tso(y, cval = NULL, delta = 0.7,
     types = c("AO", "LS", "TC"),
